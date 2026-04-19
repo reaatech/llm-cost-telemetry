@@ -1,0 +1,66 @@
+# OpenTelemetry Collector Configuration
+# Used for local development and testing
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 1000
+    spike_limit_mib: 200
+
+  attributes:
+    actions:
+      - key: service.name
+        action: upsert
+        value: llm-cost-telemetry
+
+exporters:
+  debug:
+    verbosity: detailed
+
+  jaeger:
+    endpoint: jaeger:14250
+    tls:
+      insecure: true
+
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    namespace: llm_cost
+
+  otlphttp:
+    endpoint: http://localhost:4318
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, memory_limiter, attributes]
+      exporters: [debug, jaeger]
+
+    metrics:
+      receivers: [otlp]
+      processors: [batch, memory_limiter, attributes]
+      exporters: [debug, prometheus]
+
+    logs:
+      receivers: [otlp]
+      processors: [batch, memory_limiter, attributes]
+      exporters: [debug]
+
+  telemetry:
+    logs:
+      level: debug
+    metrics:
+      address: 0.0.0.0:8888
