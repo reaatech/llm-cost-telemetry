@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # Main application service
+  llm-cost-telemetry:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=development
+      - OTEL_SERVICE_NAME=llm-cost-telemetry
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - OTEL_TRACING_ENABLED=true
+      - OTEL_METRICS_ENABLED=true
+      - AWS_REGION=us-east-1
+      - LOKI_HOST=http://loki:3100
+      - DEFAULT_DAILY_BUDGET=100.00
+      - DEFAULT_MONTHLY_BUDGET=2000.00
+    ports:
+      - "3000:3000"
+    depends_on:
+      - otel-collector
+      - loki
+    networks:
+      - llm-telemetry
+
+  # OpenTelemetry Collector
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    command:
+      - "--config=/etc/otel-collector-config.yml"
+    volumes:
+      - ./infra/otel-collector-config.yml:/etc/otel-collector-config.yml
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "13133:13133" # Health check
+    depends_on:
+      - jaeger
+    networks:
+      - llm-telemetry
+
+  # Jaeger for tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686" # Jaeger UI
+      - "14250:14250" # Jaeger gRPC
+    networks:
+      - llm-telemetry
+
+  # LocalStack for AWS CloudWatch testing
+  localstack:
+    image: localstack/localstack:latest
+    environment:
+      - SERVICES=cloudwatch,logs
+      - DEBUG=1
+      - DATA_DIR=/var/lib/localstack/data
+    ports:
+      - "4566:4566" # LocalStack gateway
+    volumes:
+      - "./infra/localstack-init.sh:/etc/localstack/init/ready.d/init.sh"
+    networks:
+      - llm-telemetry
+
+  # Grafana Loki for log aggregation
+  loki:
+    image: grafana/loki:latest
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    networks:
+      - llm-telemetry
+
+  # Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    ports:
+      - "3001:3000"
+    depends_on:
+      - loki
+      - jaeger
+    networks:
+      - llm-telemetry
+
+networks:
+  llm-telemetry:
+    driver: bridge
