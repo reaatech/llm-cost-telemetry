@@ -47,9 +47,7 @@ const AggregateByRouteSchema = z.object({
 
 const AggregateSummarySchema = z.object({
   period: TimeWindowSchema,
-  groupBy: z
-    .array(z.enum(['tenant', 'feature', 'route', 'provider', 'model']))
-    .optional(),
+  groupBy: z.array(z.enum(['tenant', 'feature', 'route', 'provider', 'model'])).optional(),
 });
 
 const BudgetCheckSchema = z.object({
@@ -382,13 +380,27 @@ export function createCostTelemetryServer(options: MCPServerOptions = {}): Serve
               content: [
                 {
                   type: 'text',
-                  text: JSON.stringify({ error: 'Invalid arguments', details: parsed.error.issues }, null, 2),
+                  text: JSON.stringify(
+                    { error: 'Invalid arguments', details: parsed.error.issues },
+                    null,
+                    2,
+                  ),
                 },
               ],
               isError: true,
             };
           }
-          const { provider, model, inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens, tenant, feature, route } = parsed.data;
+          const {
+            provider,
+            model,
+            inputTokens,
+            outputTokens,
+            cacheReadTokens,
+            cacheCreationTokens,
+            tenant,
+            feature,
+            route,
+          } = parsed.data;
 
           const telemetry: Partial<TelemetryContext> = {};
           if (typeof tenant === 'string') telemetry.tenant = tenant;
@@ -435,7 +447,11 @@ export function createCostTelemetryServer(options: MCPServerOptions = {}): Serve
               content: [
                 {
                   type: 'text',
-                  text: JSON.stringify({ error: 'Invalid arguments', details: parsed.error.issues }, null, 2),
+                  text: JSON.stringify(
+                    { error: 'Invalid arguments', details: parsed.error.issues },
+                    null,
+                    2,
+                  ),
                 },
               ],
               isError: true,
@@ -479,7 +495,11 @@ export function createCostTelemetryServer(options: MCPServerOptions = {}): Serve
               content: [
                 {
                   type: 'text',
-                  text: JSON.stringify({ error: 'Invalid arguments', details: parsed.error.issues }, null, 2),
+                  text: JSON.stringify(
+                    { error: 'Invalid arguments', details: parsed.error.issues },
+                    null,
+                    2,
+                  ),
                 },
               ],
               isError: true,
@@ -501,7 +521,11 @@ export function createCostTelemetryServer(options: MCPServerOptions = {}): Serve
               content: [
                 {
                   type: 'text',
-                  text: JSON.stringify({ error: 'Invalid arguments', details: parsed.error.issues }, null, 2),
+                  text: JSON.stringify(
+                    { error: 'Invalid arguments', details: parsed.error.issues },
+                    null,
+                    2,
+                  ),
                 },
               ],
               isError: true,
@@ -523,7 +547,11 @@ export function createCostTelemetryServer(options: MCPServerOptions = {}): Serve
               content: [
                 {
                   type: 'text',
-                  text: JSON.stringify({ error: 'Invalid arguments', details: parsed.error.issues }, null, 2),
+                  text: JSON.stringify(
+                    { error: 'Invalid arguments', details: parsed.error.issues },
+                    null,
+                    2,
+                  ),
                 },
               ],
               isError: true,
@@ -545,7 +573,11 @@ export function createCostTelemetryServer(options: MCPServerOptions = {}): Serve
               content: [
                 {
                   type: 'text',
-                  text: JSON.stringify({ error: 'Invalid arguments', details: parsed.error.issues }, null, 2),
+                  text: JSON.stringify(
+                    { error: 'Invalid arguments', details: parsed.error.issues },
+                    null,
+                    2,
+                  ),
                 },
               ],
               isError: true,
@@ -569,7 +601,11 @@ export function createCostTelemetryServer(options: MCPServerOptions = {}): Serve
               content: [
                 {
                   type: 'text',
-                  text: JSON.stringify({ error: 'Invalid arguments', details: parsed.error.issues }, null, 2),
+                  text: JSON.stringify(
+                    { error: 'Invalid arguments', details: parsed.error.issues },
+                    null,
+                    2,
+                  ),
                 },
               ],
               isError: true,
@@ -589,7 +625,11 @@ export function createCostTelemetryServer(options: MCPServerOptions = {}): Serve
               content: [
                 {
                   type: 'text',
-                  text: JSON.stringify({ error: 'Invalid arguments', details: parsed.error.issues }, null, 2),
+                  text: JSON.stringify(
+                    { error: 'Invalid arguments', details: parsed.error.issues },
+                    null,
+                    2,
+                  ),
                 },
               ],
               isError: true,
@@ -614,7 +654,11 @@ export function createCostTelemetryServer(options: MCPServerOptions = {}): Serve
               content: [
                 {
                   type: 'text',
-                  text: JSON.stringify({ error: 'Invalid arguments', details: parsed.error.issues }, null, 2),
+                  text: JSON.stringify(
+                    { error: 'Invalid arguments', details: parsed.error.issues },
+                    null,
+                    2,
+                  ),
                 },
               ],
               isError: true,

@@ -100,9 +100,8 @@ program
   .option('--dry-run', 'Build records without sending them to an exporter')
   .action(async (options) => {
     const config = loadConfig();
-    const { buildExportPayload, triggerExport, formatExportResult } = await import(
-      './cli/commands/export.command.js'
-    );
+    const { buildExportPayload, triggerExport, formatExportResult } =
+      await import('./cli/commands/export.command.js');
     const spans = await loadSpansInput(options.input);
     if (spans.length === 0) {
       console.error('No spans found. Pass --input or pipe a JSON array of cost spans to stdin.');

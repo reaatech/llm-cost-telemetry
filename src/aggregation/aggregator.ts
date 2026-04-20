@@ -204,7 +204,10 @@ export class CostAggregator {
       return this.getDimensionValue(span, 'tenant') === tenant;
     });
 
-    const totalCostUsd = roundTo(filtered.reduce((sum, span) => sum + span.costUsd, 0), 6);
+    const totalCostUsd = roundTo(
+      filtered.reduce((sum, span) => sum + span.costUsd, 0),
+      6,
+    );
     const totalInputTokens = filtered.reduce((sum, span) => sum + span.inputTokens, 0);
     const totalOutputTokens = filtered.reduce((sum, span) => sum + span.outputTokens, 0);
     const totalCalls = filtered.length;
@@ -214,7 +217,10 @@ export class CostAggregator {
     for (const dim of groupBy) {
       const dimSpans = filtered.filter((span) => this.getDimensionValue(span, dim) !== undefined);
       byDimension[dim] = {
-        totalCost: roundTo(dimSpans.reduce((sum, span) => sum + span.costUsd, 0), 6),
+        totalCost: roundTo(
+          dimSpans.reduce((sum, span) => sum + span.costUsd, 0),
+          6,
+        ),
         totalCalls: dimSpans.length,
       };
     }
@@ -253,10 +259,7 @@ export class CostAggregator {
     return this.storage.size;
   }
 
-  private getDimensionValue(
-    span: CostSpan,
-    dimension: AggregationDimension,
-  ): string | undefined {
+  private getDimensionValue(span: CostSpan, dimension: AggregationDimension): string | undefined {
     switch (dimension) {
       case 'provider':
         return span.provider;

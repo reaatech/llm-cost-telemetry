@@ -7,7 +7,7 @@ import { promisify } from 'util';
 
 const execFileAsync = promisify(execFile);
 
-const cliPath = '/Users/rick/dev/2026-04/llm-cost-telemetry/dist/cli.js';
+const cliPath = resolve('dist/cli.js');
 
 function createSpansFile(): string {
   const dir = mkdtempSync(join(tmpdir(), 'llm-cost-telemetry-cli-'));
