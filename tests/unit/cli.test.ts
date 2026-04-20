@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { execFile } from 'child_process';
 import { mkdtempSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { promisify } from 'util';
 
 const execFileAsync = promisify(execFile);
