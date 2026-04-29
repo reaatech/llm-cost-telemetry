@@ -4,7 +4,7 @@
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import type { Tracer, Span } from '@opentelemetry/api';
 import { trace, SpanKind, context, propagation } from '@opentelemetry/api';
@@ -58,20 +58,20 @@ export class TracingManager {
       return;
     }
 
-    const resource = new Resource({
+    const resource = resourceFromAttributes({
       [SemanticResourceAttributes.SERVICE_NAME]: this.options.serviceName,
       [SemanticResourceAttributes.SERVICE_VERSION]: this.options.serviceVersion,
       ...(this.options.resourceAttributes || {}),
     });
 
-    this.provider = new NodeTracerProvider({ resource });
-
     const exporter = new OTLPTraceExporter({
       url: this.options.exporterEndpoint,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.provider.addSpanProcessor(new BatchSpanProcessor(exporter) as any);
+    this.provider = new NodeTracerProvider({
+      resource,
+      spanProcessors: [new BatchSpanProcessor(exporter)],
+    });
     this.provider.register();
   }
 
