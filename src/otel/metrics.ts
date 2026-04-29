@@ -3,7 +3,7 @@
  */
 import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import type { PushMetricExporter } from '@opentelemetry/sdk-metrics';
-import { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import type { Counter, Histogram, UpDownCounter } from '@opentelemetry/api';
 import type { TelemetryConfig, CostSpan } from '../types/index.js';
@@ -42,7 +42,7 @@ export class MetricsManager {
       return;
     }
 
-    const resource = new Resource({
+    const resource = resourceFromAttributes({
       [SemanticResourceAttributes.SERVICE_NAME]: this.options.serviceName,
       [SemanticResourceAttributes.SERVICE_VERSION]: this.options.serviceVersion,
       ...(this.options.resourceAttributes || {}),
