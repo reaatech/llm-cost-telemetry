@@ -80,7 +80,6 @@ describe('Aggregation Engine', () => {
       let flushedSpans: CostSpan[] = [];
 
       const collector = new CostCollector({
-        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
         onFlush: (spans) => {
           flushedSpans = spans;
         },
