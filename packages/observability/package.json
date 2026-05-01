@@ -1,0 +1,53 @@
+{
+  "name": "@reaatech/llm-cost-telemetry-observability",
+  "version": "0.1.0",
+  "description": "OpenTelemetry tracing, metrics, and structured logging for LLM cost telemetry",
+  "license": "MIT",
+  "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reaatech/llm-cost-telemetry.git",
+    "directory": "packages/observability"
+  },
+  "homepage": "https://github.com/reaatech/llm-cost-telemetry/tree/main/packages/observability#readme",
+  "bugs": {
+    "url": "https://github.com/reaatech/llm-cost-telemetry/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.8.0",
+    "@opentelemetry/sdk-metrics": "^2.7.0",
+    "@opentelemetry/sdk-trace-base": "^2.7.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.215.0",
+    "@opentelemetry/sdk-trace-node": "^2.7.0",
+    "@opentelemetry/resources": "^2.7.0",
+    "@opentelemetry/semantic-conventions": "^1.24.0",
+    "@reaatech/llm-cost-telemetry": "workspace:*",
+    "pino": "^10.3.1"
+  },
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  }
+}

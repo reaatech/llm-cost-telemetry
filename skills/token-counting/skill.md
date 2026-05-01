@@ -16,7 +16,7 @@ Token counting provides accurate token enumeration for LLM API calls using provi
 ### Count Tokens for OpenAI
 
 ```typescript
-import { countOpenAITokens } from 'llm-cost-telemetry';
+import { countOpenAITokens } from '@reaatech/llm-cost-telemetry-calculator';
 
 // Count tokens for a single text string
 const result = await countOpenAITokens('gpt-4', 'Hello, world!');
@@ -28,7 +28,7 @@ console.log(`Estimated: ${result.estimated}`);
 ### Count Tokens for Multiple Messages
 
 ```typescript
-import { countMessageTokens } from 'llm-cost-telemetry';
+import { countMessageTokens } from '@reaatech/llm-cost-telemetry-calculator';
 
 // Count tokens for a list of messages
 const result = await countMessageTokens('openai', 'gpt-4', [
@@ -42,7 +42,7 @@ console.log(`Total tokens: ${result.tokens}`);
 ### Count Tokens for Anthropic
 
 ```typescript
-import { countAnthropicTokens } from 'llm-cost-telemetry';
+import { countAnthropicTokens } from '@reaatech/llm-cost-telemetry-calculator';
 
 // Count tokens for Anthropic (uses estimation)
 const result = await countAnthropicTokens('claude-3-opus-20240229', 'Hello, world!');
@@ -54,7 +54,7 @@ console.log(`Estimated: ${result.estimated}`);
 ### Count Function Definition Tokens
 
 ```typescript
-import { countFunctionTokens } from 'llm-cost-telemetry';
+import { countFunctionTokens } from '@reaatech/llm-cost-telemetry-calculator';
 
 // Count tokens for function definitions separately
 const functionDefTokens = await countFunctionTokens('gpt-4', [
@@ -76,7 +76,7 @@ console.log(`Function definition tokens: ${functionDefTokens.tokens}`);
 ### Pre-Call Cost Estimation
 
 ```typescript
-import { estimateCost } from 'llm-cost-telemetry';
+import { estimateCost } from '@reaatech/llm-cost-telemetry-calculator';
 
 // Estimate cost before making the call
 const estimate = await estimateCost({

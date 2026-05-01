@@ -1,0 +1,58 @@
+{
+  "name": "@reaatech/llm-cost-telemetry-exporters",
+  "version": "0.1.0",
+  "description": "Telemetry exporters — CloudWatch, Cloud Monitoring, and Loki/Phoenix",
+  "license": "MIT",
+  "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reaatech/llm-cost-telemetry.git",
+    "directory": "packages/exporters"
+  },
+  "homepage": "https://github.com/reaatech/llm-cost-telemetry/tree/main/packages/exporters#readme",
+  "bugs": {
+    "url": "https://github.com/reaatech/llm-cost-telemetry/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@reaatech/llm-cost-telemetry": "workspace:*",
+    "@reaatech/llm-cost-telemetry-observability": "workspace:*"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-cloudwatch": "^3.500.0",
+    "@google-cloud/monitoring": "^5.3.1"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-cloudwatch": {
+      "optional": true
+    },
+    "@google-cloud/monitoring": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  }
+}

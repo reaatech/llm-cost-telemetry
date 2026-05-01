@@ -16,7 +16,7 @@ Phoenix export sends LLM cost metrics to Grafana Loki (part of the Grafana obser
 ### Configure Phoenix/Loki Exporter
 
 ```typescript
-import { PhoenixExporter } from 'llm-cost-telemetry';
+import { PhoenixExporter } from '@reaatech/llm-cost-telemetry-exporters';
 
 const exporter = new PhoenixExporter({
   // Loki endpoint
@@ -38,7 +38,8 @@ const exporter = new PhoenixExporter({
 ### Export Cost Metrics
 
 ```typescript
-import { CostAggregator, PhoenixExporter } from 'llm-cost-telemetry';
+import { CostAggregator } from '@reaatech/llm-cost-telemetry-aggregation'
+import { PhoenixExporter } from '@reaatech/llm-cost-telemetry-exporters';
 
 const aggregator = new CostAggregator();
 const exporter = new PhoenixExporter({ host: 'http://loki:3100' });

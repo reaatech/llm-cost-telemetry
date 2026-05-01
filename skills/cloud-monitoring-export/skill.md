@@ -16,7 +16,7 @@ Cloud Monitoring export sends LLM cost metrics to Google Cloud Monitoring (forme
 ### Configure Cloud Monitoring Exporter
 
 ```typescript
-import { CloudMonitoringExporter } from 'llm-cost-telemetry';
+import { CloudMonitoringExporter } from '@reaatech/llm-cost-telemetry-exporters';
 
 const exporter = new CloudMonitoringExporter({
   projectId: 'my-gcp-project',
@@ -33,7 +33,8 @@ const exporter = new CloudMonitoringExporter({
 ### Export Cost Metrics
 
 ```typescript
-import { CostAggregator, CloudMonitoringExporter } from 'llm-cost-telemetry';
+import { CostAggregator } from '@reaatech/llm-cost-telemetry-aggregation'
+import { CloudMonitoringExporter } from '@reaatech/llm-cost-telemetry-exporters';
 
 const aggregator = new CostAggregator();
 const exporter = new CloudMonitoringExporter({ projectId: 'my-gcp-project' });

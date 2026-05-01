@@ -16,7 +16,7 @@ Cost interception wraps LLM provider SDKs to automatically capture cost data fro
 ### Wrap OpenAI Client
 
 ```typescript
-import { wrapOpenAI } from 'llm-cost-telemetry';
+import { wrapOpenAI } from '@reaatech/llm-cost-telemetry-providers';
 import OpenAI from 'openai';
 
 const client = wrapOpenAI(new OpenAI({ apiKey: process.env.OPENAI_API_KEY }));
@@ -35,7 +35,7 @@ const response = await client.chat.completions.create({
 ### Wrap Anthropic Client
 
 ```typescript
-import { wrapAnthropic } from 'llm-cost-telemetry';
+import { wrapAnthropic } from '@reaatech/llm-cost-telemetry-providers';
 import Anthropic from '@anthropic-ai/sdk';
 
 const client = wrapAnthropic(new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }));
@@ -55,7 +55,7 @@ const response = await client.messages.create({
 ### Wrap Google Client
 
 ```typescript
-import { wrapGoogleGenerativeAI } from 'llm-cost-telemetry';
+import { wrapGoogleGenerativeAI } from '@reaatech/llm-cost-telemetry-providers';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = wrapGoogleGenerativeAI(new GoogleGenerativeAI(process.env.GOOGLE_API_KEY));
@@ -75,7 +75,8 @@ const response = await model.generateContent('Hello!', {
 For custom integrations, use the `CostCollector` to record spans manually:
 
 ```typescript
-import { CostCollector, calculateCost } from 'llm-cost-telemetry';
+import { CostCollector } from '@reaatech/llm-cost-telemetry-aggregation'
+import { calculateCost } from '@reaatech/llm-cost-telemetry-calculator';
 
 const collector = new CostCollector({
   maxBufferSize: 1000,

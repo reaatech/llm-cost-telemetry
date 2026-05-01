@@ -11,46 +11,95 @@ confidence_threshold: 0.9
 
 ## What this is
 
-This document defines how to use `llm-cost-telemetry` to track, aggregate, and export LLM costs in production applications. It covers provider SDK wrapping, cost calculation, multi-tenant aggregation, and integration with CloudWatch, Cloud Monitoring, and Grafana Loki.
+This document defines how to use the `@reaatech/llm-cost-telemetry-*` packages to track, aggregate, and export LLM costs in production applications. It covers provider SDK wrapping, cost calculation, multi-tenant aggregation, and integration with CloudWatch, Cloud Monitoring, and Grafana Loki.
 
 **Target audience:** Engineers building production LLM-powered applications who need accurate cost tracking, multi-tenant cost allocation, budget enforcement, and integration with existing observability stacks.
 
 ---
 
-## Architecture Overview
+## Monorepo Structure
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│  LLM Provider   │────▶│  llm-cost-       │────▶│   Exporters    │
-│  SDKs           │     │  telemetry       │     │ - CloudWatch   │
-│ (OpenAI, etc)   │     │                  │     │ - Cloud Mon    │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-                                │
-                                ▼
-                       ┌──────────────────┐
-                       │  Three-Layer     │
-                       │  MCP Tools:      │
-                       │  - cost.span.*   │
-                       │  - cost.aggregate│
-                       │  - cost.budget.* │
-                       └──────────────────┘
+llm-cost-telemetry/
+├── packages/
+│   ├── core/           @reaatech/llm-cost-telemetry
+│   ├── calculator/     @reaatech/llm-cost-telemetry-calculator
+│   ├── providers/      @reaatech/llm-cost-telemetry-providers
+│   ├── aggregation/    @reaatech/llm-cost-telemetry-aggregation
+│   ├── observability/  @reaatech/llm-cost-telemetry-observability
+│   ├── exporters/      @reaatech/llm-cost-telemetry-exporters
+│   ├── mcp/            @reaatech/llm-cost-telemetry-mcp
+│   └── cli/            @reaatech/llm-cost-telemetry-cli
+├── skills/
+├── pnpm-workspace.yaml
+├── turbo.json
+└── biome.json
 ```
 
-### Key Components
+### Dependency Graph
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| **Provider Wrappers** | `src/providers/` | Wrap OpenAI, Anthropic, Google SDKs |
-| **Cost Calculator** | `src/calculator/` | Calculate costs from token counts |
-| **Aggregation Engine** | `src/aggregation/` | Aggregate costs by tenant/feature/route |
-| **Exporters** | `src/exporters/` | Export to CloudWatch, Cloud Monitoring, Loki |
-| **OTel Integration** | `src/otel/` | OpenTelemetry tracing and metrics |
+```
+                    ┌────────────────────────────┐
+                    │     @reaatech/              │
+                    │  llm-cost-telemetry (core)  │
+                    │  types, schemas, utils,     │
+                    │  config                     │
+                    └──────────┬─────────────────┘
+                               │
+        ┌──────────────────────┼──────────────────────┐
+        v                      v                      v
+┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+│  calculator   │    │   providers   │    │  aggregation  │
+│  cost engine  │    │  SDK wrappers │    │  collector,   │
+│  pricing,     │    │  OpenAI,      │    │  aggregator,  │
+│  tokens       │    │  Anthropic,   │    │  budget mgr   │
+│               │    │  Google       │    │               │
+└───────────────┘    └───────────────┘    └───────────────┘
+        │                                       │
+        │         ┌───────────────┐              │
+        │         │ observability │              │
+        │         │  OTel tracing │              │
+        │         │  metrics,     │              │
+        │         │  logging      │              │
+        │         └───────┬───────┘              │
+        │                 │                      │
+        │    ┌────────────┼──────────────┐       │
+        │    v            v              v       │
+        │ ┌───────────────────────────────┐     │
+        │ │        exporters              │     │
+        │ │ CloudWatch, Cloud Monitoring, │     │
+        │ │ Phoenix/Loki                  │     │
+        │ └───────────────────────────────┘     │
+        │                                       │
+        v                         v             v
+┌───────────────┐    ┌───────────────────────────────┐
+│      mcp      │    │             cli               │
+│  MCP server   │    │  report, check, export        │
+│  3-layer      │    │  commands                     │
+│  tools        │    │                               │
+└───────────────┘    └───────────────────────────────┘
+```
+
+---
+
+## Key Components
+
+| Component | Package | Purpose |
+|-----------|---------|---------|
+| **Core Types** | `@reaatech/llm-cost-telemetry` | Domain types, Zod schemas, utilities, configuration loaders |
+| **Cost Calculator** | `@reaatech/llm-cost-telemetry-calculator` | Pricing lookup, token counting, cost estimation |
+| **Provider Wrappers** | `@reaatech/llm-cost-telemetry-providers` | Wrap OpenAI, Anthropic, Google SDKs |
+| **Aggregation** | `@reaatech/llm-cost-telemetry-aggregation` | Collect, aggregate, and enforce budgets |
+| **Observability** | `@reaatech/llm-cost-telemetry-observability` | OTel tracing, metrics, Pino logging |
+| **Exporters** | `@reaatech/llm-cost-telemetry-exporters` | CloudWatch, Cloud Monitoring, Loki/Phoenix |
+| **MCP Server** | `@reaatech/llm-cost-telemetry-mcp` | Three-layer MCP tools for agent integration |
+| **CLI** | `@reaatech/llm-cost-telemetry-cli` | Command-line reports, budget checks, exports |
 
 ---
 
 ## Three-Layer MCP Tool Architecture
 
-The library exposes three distinct tool groups for different use cases:
+The `@reaatech/llm-cost-telemetry-mcp` package exposes three distinct tool groups:
 
 ### Layer 1: cost.span.* (Atomic Operations)
 
@@ -131,12 +180,11 @@ Opinionated operations for budget enforcement:
 ### Wrap OpenAI Client
 
 ```typescript
-import { wrapOpenAI } from 'llm-cost-telemetry';
+import { wrapOpenAI } from '@reaatech/llm-cost-telemetry-providers';
 import OpenAI from 'openai';
 
 const client = wrapOpenAI(new OpenAI({ apiKey: process.env.OPENAI_API_KEY }));
 
-// All calls are automatically tracked
 const response = await client.chat.completions.create({
   model: 'gpt-4',
   messages: [{ role: 'user', content: 'Hello!' }],
@@ -151,12 +199,11 @@ const response = await client.chat.completions.create({
 ### Wrap Anthropic Client
 
 ```typescript
-import { wrapAnthropic } from 'llm-cost-telemetry';
+import { wrapAnthropic } from '@reaatech/llm-cost-telemetry-providers';
 import Anthropic from '@anthropic-ai/sdk';
 
 const client = wrapAnthropic(new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }));
 
-// Supports prompt caching cost calculations
 const response = await client.messages.create({
   model: 'claude-opus-20240229',
   max_tokens: 1024,
@@ -172,7 +219,7 @@ const response = await client.messages.create({
 ### Wrap Google Client
 
 ```typescript
-import { wrapGoogleGenerativeAI } from 'llm-cost-telemetry';
+import { wrapGoogleGenerativeAI } from '@reaatech/llm-cost-telemetry-providers';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = wrapGoogleGenerativeAI(new GoogleGenerativeAI(process.env.GOOGLE_API_KEY));
@@ -194,7 +241,7 @@ const response = await model.generateContent('Hello!', {
 ### Configure Aggregation
 
 ```typescript
-import { CostAggregator } from 'llm-cost-telemetry';
+import { CostAggregator } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const aggregator = new CostAggregator({
   dimensions: ['tenant', 'feature', 'route'],
@@ -205,11 +252,10 @@ const aggregator = new CostAggregator({
 ### Get Cost Summary
 
 ```typescript
-import { CostAggregator } from 'llm-cost-telemetry';
+import { CostAggregator } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const aggregator = new CostAggregator();
 
-// Get overall cost summary
 const summary = aggregator.getSummary({
   period: 'month',
   groupBy: ['tenant', 'feature']
@@ -217,8 +263,6 @@ const summary = aggregator.getSummary({
 
 console.log('Cost Summary:');
 console.log(`Total: $${summary.totalUsd}`);
-console.log(`By tenant:`, summary.byDimension?.tenant);
-console.log(`By feature:`, summary.byDimension?.feature);
 ```
 
 ---
@@ -228,7 +272,7 @@ console.log(`By feature:`, summary.byDimension?.feature);
 ### Configure Budgets
 
 ```typescript
-import { BudgetManager } from 'llm-cost-telemetry';
+import { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const budgetManager = new BudgetManager({
   global: {
@@ -250,7 +294,7 @@ const budgetManager = new BudgetManager({
 ### Check Budget Before API Call
 
 ```typescript
-import { BudgetManager } from 'llm-cost-telemetry';
+import { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const budgetManager = new BudgetManager({
   tenants: { 'acme-corp': { daily: 100.00 } }
@@ -274,7 +318,7 @@ if (!status.withinBudget) {
 ### CloudWatch Export
 
 ```typescript
-import { CloudWatchExporter } from 'llm-cost-telemetry';
+import { CloudWatchExporter } from '@reaatech/llm-cost-telemetry-exporters';
 
 const exporter = new CloudWatchExporter({
   region: 'us-east-1',
@@ -287,7 +331,7 @@ const exporter = new CloudWatchExporter({
 ### Cloud Monitoring Export
 
 ```typescript
-import { CloudMonitoringExporter } from 'llm-cost-telemetry';
+import { CloudMonitoringExporter } from '@reaatech/llm-cost-telemetry-exporters';
 
 const exporter = new CloudMonitoringExporter({
   projectId: 'my-gcp-project',
@@ -299,7 +343,7 @@ const exporter = new CloudMonitoringExporter({
 ### Phoenix/Loki Export
 
 ```typescript
-import { PhoenixExporter } from 'llm-cost-telemetry';
+import { PhoenixExporter } from '@reaatech/llm-cost-telemetry-exporters';
 
 const exporter = new PhoenixExporter({
   host: 'http://loki:3100',
@@ -360,11 +404,11 @@ npx llm-cost-telemetry export \
 
 ### Structured Logging
 
-Every cost event is logged with:
+Every cost event is logged via `@reaatech/llm-cost-telemetry-observability`:
 
 ```json
 {
-  "timestamp": "2026-04-15T23:00:00Z",
+  "timestamp": "2026-04-30T17:00:00Z",
   "service": "llm-cost-telemetry",
   "span_id": "abc123",
   "trace_id": "def456",
@@ -384,10 +428,10 @@ Every cost event is logged with:
 
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|
-| `llm.cost.tokens` | Counter | `provider`, `model`, `type` | Token usage |
-| `llm.cost.amount` | Histogram | `provider`, `model`, `tenant` | Cost in USD |
-| `llm.cost.calls` | Counter | `provider`, `model`, `status` | API calls |
-| `llm.budget.utilization` | Gauge | `tenant` | Budget usage % |
+| `gen_ai.client.token.use` | Counter | `provider`, `model`, `type` | Token usage |
+| `gen_ai.client.operation.duration` | Histogram | `provider`, `model`, `tenant` | Cost in USD |
+| `gen_ai.client.operation.calls` | Counter | `provider`, `model`, `status` | API calls |
+| `llm.budget.utilization` | UpDownCounter | `tenant` | Budget usage % |
 
 ---
 
@@ -411,7 +455,6 @@ Before deploying cost telemetry to production:
 ## References
 
 - **ARCHITECTURE.md** — System design deep dive
-- **DEV_PLAN.md** — Development checklist
 - **README.md** — Quick start and overview
 - **skills/** — Agent development skills
 - **MCP Specification** — https://modelcontextprotocol.io/

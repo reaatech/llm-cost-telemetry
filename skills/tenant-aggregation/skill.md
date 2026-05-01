@@ -16,7 +16,7 @@ Tenant aggregation collects and summarizes LLM costs by tenant, feature, route, 
 ### Configure Aggregation
 
 ```typescript
-import { CostAggregator } from 'llm-cost-telemetry';
+import { CostAggregator } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const aggregator = new CostAggregator({
   dimensions: ['tenant', 'feature', 'route'],
@@ -27,7 +27,7 @@ const aggregator = new CostAggregator({
 ### Record Costs with Tenant Context
 
 ```typescript
-import { wrapOpenAI } from 'llm-cost-telemetry';
+import { wrapOpenAI } from '@reaatech/llm-cost-telemetry-providers';
 
 const client = wrapOpenAI(new OpenAI({ apiKey: process.env.OPENAI_API_KEY }));
 
@@ -46,7 +46,7 @@ const response = await client.chat.completions.create({
 ### Get Costs by Tenant
 
 ```typescript
-import { CostAggregator } from 'llm-cost-telemetry';
+import { CostAggregator } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const aggregator = new CostAggregator();
 
@@ -60,7 +60,7 @@ console.log(`Total cost for acme-corp: $${totalUsd}`);
 ### Get Costs by Feature
 
 ```typescript
-import { CostAggregator } from 'llm-cost-telemetry';
+import { CostAggregator } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const aggregator = new CostAggregator();
 
@@ -74,7 +74,7 @@ console.log(`Chat support costs this week: $${totalUsd}`);
 ### Get Cost Summary
 
 ```typescript
-import { CostAggregator } from 'llm-cost-telemetry';
+import { CostAggregator } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const aggregator = new CostAggregator();
 

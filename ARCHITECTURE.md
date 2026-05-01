@@ -17,29 +17,34 @@
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                         Telemetry Core                                   │
 │  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │                      Three-Layer Architecture                     │   │
-│  │                                                                   │   │
-│  │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐           │   │
-│  │  │ cost.span.* │───▶│ cost.       │───▶│ cost.       │           │   │
-│  │  │  (Atomic)   │    │ aggregate.* │    │ budget.*    │           │   │
-│  │  │             │    │(Aggregation)│   │  (Budget)   │           │   │
-│  │  └─────────────┘    └─────────────┘    └─────────────┘           │   │
+│  │            @reaatech/llm-cost-telemetry (core)                    │   │
+│  │            types, schemas, utilities, config                      │   │
 │  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐   │
+│  │  calculator  │ │  providers   │ │ aggregation  │ │ observability│   │
+│  │  cost engine │ │  OpenAI,     │ │ collector,   │ │ OTel + Pino  │   │
+│  │  pricing,    │ │  Anthropic,  │ │ aggregator,  │ │              │   │
+│  │  tokens      │ │  Google      │ │ budget mgr   │ │              │   │
+│  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘ └──────┬───────┘   │
+│         │                │                │                │             │
+│         └────────────────┼────────────────┼────────────────┘             │
+│                           ▼                                              │
+│                  ┌─────────────────┐                                    │
+│                  │    exporters    │                                    │
+│                  │ CloudWatch,     │                                    │
+│                  │ Cloud Monitor,  │                                    │
+│                  │ Phoenix/Loki    │                                    │
+│                  └─────────────────┘                                    │
 └─────────────────────────────────────────────────────────────────────────┘
                               ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                        Telemetry Engine                                  │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │
-│  │  Provider   │  │    Cost     │  │ Aggregation │  │  Exporters  │    │
-│  │  Wrappers   │  │  Calculator │  │   Engine    │  │             │    │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘    │
-│         │                 │                │                │           │
-│         └─────────────────┼────────────────┼────────────────┘           │
-│                           ▼                                            │
-│                  ┌─────────────────┐                                    │
-│                  │  Observability  │                                    │
-│                  │  (OTel + Logs)  │                                    │
-│                  └─────────────────┘                                    │
+│                       Orchestration Layer                                │
+│  ┌──────────────────┐            ┌──────────────────┐                    │
+│  │       mcp        │            │       cli        │                    │
+│  │  MCP Server      │            │  report, check,  │                    │
+│  │  3-layer tools   │            │  export, config  │                    │
+│  └──────────────────┘            └──────────────────┘                    │
 └─────────────────────────────────────────────────────────────────────────┘
                               ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -83,59 +88,116 @@
 
 ---
 
+## Package Architecture
+
+### Package Dependency Graph
+
+```
+                    ┌────────────────────────────┐
+                    │     @reaatech/              │
+                    │  llm-cost-telemetry (core)  │
+                    │  types, schemas, utils,     │
+                    │  config                     │
+                    └──────────┬─────────────────┘
+                               │
+        ┌──────────────────────┼──────────────────────┐
+        v                      v                      v
+┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+│  calculator   │    │   providers   │    │  aggregation  │
+│  (depends on  │    │  (depends on  │    │  (depends on  │
+│   core)       │    │   core)       │    │   core)       │
+└───────────────┘    └───────────────┘    └───────────────┘
+        │                                       │
+        │         ┌───────────────┐              │
+        │         │ observability │              │
+        │         │  (depends on  │              │
+        │         │   core)       │              │
+        │         └───────┬───────┘              │
+        │                 │                      │
+        │    ┌────────────┼──────────────────┐   │
+        │    v            v                  v   │
+        │ ┌──────────────────────────────────┐   │
+        │ │           exporters              │   │
+        │ │  (depends on core, observability)│   │
+        │ └──────────────────────────────────┘   │
+        │                                        │
+        v                          v             v
+┌───────────────┐     ┌────────────────────────────────┐
+│      mcp      │     │              cli                │
+│  (depends on  │     │  (depends on core,              │
+│   core, calc, │     │   aggregation, exporters)       │
+│   aggregation)│     │                                 │
+└───────────────┘     └────────────────────────────────┘
+```
+
+| Package | Directory | Dependencies |
+|---------|-----------|-------------|
+| `@reaatech/llm-cost-telemetry` | `packages/core` | zod |
+| `@reaatech/llm-cost-telemetry-calculator` | `packages/calculator` | core, tiktoken |
+| `@reaatech/llm-cost-telemetry-providers` | `packages/providers` | core (peers: openai, @anthropic-ai/sdk, @google/generative-ai) |
+| `@reaatech/llm-cost-telemetry-aggregation` | `packages/aggregation` | core |
+| `@reaatech/llm-cost-telemetry-observability` | `packages/observability` | core, @opentelemetry/*, pino |
+| `@reaatech/llm-cost-telemetry-exporters` | `packages/exporters` | core, observability (peers: @aws-sdk/client-cloudwatch, @google-cloud/monitoring) |
+| `@reaatech/llm-cost-telemetry-mcp` | `packages/mcp` | core, calculator, aggregation, @modelcontextprotocol/sdk |
+| `@reaatech/llm-cost-telemetry-cli` | `packages/cli` | core, aggregation, exporters, commander |
+
+---
+
 ## Component Deep Dive
 
-### Three-Layer MCP Tool Architecture
+### Core (`@reaatech/llm-cost-telemetry`)
+
+The foundation package. All other packages depend on it.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                   Layer 1: cost.span.* (Atomic)                      │
+│                      Core Package                                    │
 │                                                                      │
-│  Fast, stateless operations for recording individual cost spans      │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐     │
+│  │     Domain      │  │    Schemas      │  │    Utilities    │     │
+│  │     Types       │  │    (Zod)        │  │                 │     │
+│  │                 │  │                 │  │ - ID generation │     │
+│  │ - CostSpan      │  │ - CostSpanSchema│  │ - Time math     │     │
+│  │ - CostBreakdown │  │ - BudgetSchema  │  │ - Cost calc     │     │
+│  │ - BudgetConfig  │  │ - ExportConfig  │  │ - Retry/backoff │     │
+│  │ - PricingTier   │  │                 │  │ - Hashing       │     │
+│  │ - 40+ types     │  │ - 35+ schemas   │  │ - 25 functions  │     │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘     │
 │                                                                      │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐  │
-│  │     record      │    │       get       │    │      flush      │  │
-│  │                 │    │                 │    │                 │  │
-│  │ Record a cost   │    │ Retrieve span   │    │ Flush buffered  │  │
-│  │ span            │    │ by ID           │    │ spans           │  │
-│  └─────────────────┘    └─────────────────┘    └─────────────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────┐
-│                Layer 2: cost.aggregate.* (Aggregation)               │
-│                                                                      │
-│  Stateful operations for cost aggregation by dimensions              │
-│                                                                      │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐  │
-│  │   by_tenant     │    │   by_feature    │    │    by_route     │  │
-│  │                 │    │                 │    │                 │  │
-│  │ Get costs by    │    │ Get costs by    │    │ Get costs by    │  │
-│  │ tenant          │    │ feature         │    │ route           │  │
-│  └─────────────────┘    └─────────────────┘    └─────────────────┘  │
-│                                                                      │
-│  ┌─────────────────┐    ┌─────────────────┐                         │
-│  │     summary     │    │                 │                         │
-│  │                 │    │                 │                         │
-│  │ Get cost        │    │                 │                         │
-│  │ summary         │    │                 │                         │
-│  └─────────────────┘    └─────────────────┘                         │
-└─────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────┐
-│                Layer 3: cost.budget.* (Budget Management)            │
-│                                                                      │
-│  Opinionated operations for budget enforcement                       │
-│                                                                      │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐  │
-│  │      check      │    │       set       │    │      alert      │  │
-│  │                 │    │                 │    │                 │  │
-│  │ Check budget    │    │ Set budget      │    │ Configure       │  │
-│  │ status          │    │ limits          │    │ alerts          │  │
-│  └─────────────────┘    └─────────────────┘    └─────────────────┘  │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                        Configuration                          │    │
+│  │  loadConfig, loadTelemetryConfig, loadBudgetConfig,          │    │
+│  │  loadCloudWatchConfig, loadCloudMonitoringConfig,            │    │
+│  │  loadPhoenixConfig, DEFAULT_CONFIG                           │    │
+│  └─────────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Provider Wrappers
+### Calculator (`@reaatech/llm-cost-telemetry-calculator`)
+
+Cost calculation engine with pricing, token counting, and estimation.
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Cost Calculator Engine                           │
+│                                                                      │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐  │
+│  │    Pricing      │    │    Engine       │    │    Tokens       │  │
+│  │                 │    │                 │    │                 │  │
+│  │ - Model pricing │    │ - Provider-     │    │ - tiktoken      │  │
+│  │ - Custom rates  │    │   agnostic      │    │ - Fallback      │  │
+│  │ - 19+ models    │    │ - Cache-aware   │    │   estimation    │  │
+│  │ - Glob matching │    │ - Compare/save  │    │ - Function call │  │
+│  └─────────────────┘    └─────────────────┘    └─────────────────┘  │
+│                                                                      │
+│  Input: { provider, model, input_tokens, output_tokens, ... }       │
+│  Output: { cost_usd, breakdown: { input, output, cache } }          │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Providers (`@reaatech/llm-cost-telemetry-providers`)
+
+SDK wrappers that intercept API calls and emit cost spans.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -146,11 +208,11 @@
 │  │   Wrapper   │    │   Wrapper   │    │   Wrapper   │              │
 │  │             │    │             │    │             │              │
 │  │ - Intercept │    │ - Intercept │    │ - Intercept │              │
-│  │   requests  │    │   requests  │    │   requests  │              │
-│  │ - Extract   │    │ - Extract   │    │ - Extract   │              │
-│  │   usage     │    │   usage     │    │   usage     │              │
-│  │ - Handle    │    │ - Cache-    │    │ - Handle    │              │
-│  │   streaming │    │   aware     │    │   streaming │              │
+│  │   create()  │    │   create()  │    │   generate  │              │
+│  │ - Extract   │    │ - Extract   │    │   Content   │              │
+│  │   usage     │    │   usage     │    │ - Handle    │              │
+│  │ - Handle    │    │ - Cache-    │    │   streaming │              │
+│  │   streaming │    │   aware     │    │             │              │
 │  └──────┬──────┘    └──────┬──────┘    └──────┬──────┘              │
 │         │                   │                   │                     │
 │         └───────────────────┼───────────────────┘                     │
@@ -162,47 +224,31 @@
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Cost Calculator
+### Aggregation (`@reaatech/llm-cost-telemetry-aggregation`)
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                     Cost Calculator Engine                           │
-│                                                                      │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐  │
-│  │    Pricing      │    │    Engine       │    │    Tokens       │  │
-│  │                 │    │                 │    │                 │  │
-│  │ - Model pricing │    │ - Provider-     │    │ - tiktoken      │  │
-│  │ - Custom rates  │    │   agnostic      │    │ - Fallback      │  │
-│  │ - Currency      │    │ - Cache-aware   │    │   estimation    │  │
-│  │   conversion    │    │ - Batch support │    │ - Function call │  │
-│  └─────────────────┘    └─────────────────┘    └─────────────────┘  │
-│                                                                      │
-│  Input: { provider, model, input_tokens, output_tokens, ... }       │
-│  Output: { cost_usd, breakdown: { input, output, cache } }          │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Aggregation Engine
+Collection, multi-dimensional aggregation, and budget enforcement.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                     Aggregation Engine                               │
 │                                                                      │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐  │
-│  │   Collector     │    │   Aggregator    │    │    Budget       │  │
-│  │                 │    │                 │    │   Manager       │  │
-│  │ - In-memory     │    │ - By tenant     │    │ - Per-tenant    │  │
-│  │   buffering     │    │ - By feature    │    │   budgets       │  │
-│  │ - Flush         │    │ - By route      │    │ - Alerts and    │  │
-│  │   intervals     │    │ - Time windows  │    │   warnings      │  │
-│  │ - Backpressure  │    │                 │    │ - Exhaustion    │  │
-│  └─────────────────┘    └─────────────────┘    └─────────────────┘  │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐     │
+│  │   Collector     │  │   Aggregator    │  │    Budget       │     │
+│  │                 │  │                 │  │   Manager       │     │
+│  │ - In-memory     │  │ - By tenant     │  │ - Per-tenant    │     │
+│  │   buffering     │  │ - By feature    │  │   budgets       │     │
+│  │ - Flush         │  │ - By route      │  │ - Alerts and    │     │
+│  │   intervals     │  │ - Time windows  │  │   warnings      │     │
+│  │ - Backpressure  │  │ - Canonic spans │  │ - Exhaustion    │     │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘     │
 │                                                                      │
 │  Output: CostRecord { tenant, feature, route, period, total_cost }  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Exporter Architecture
+### Exporters (`@reaatech/llm-cost-telemetry-exporters`)
+
+Push cost data to observability platforms.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -212,7 +258,7 @@
 │  │                    Base Exporter (Abstract)                  │    │
 │  │  - Batch export support                                      │    │
 │  │  - Error handling and retries                                │    │
-│  │  - Circuit breaker pattern                                   │    │
+│  │  - Retry with backoff                                        │    │
 │  └─────────────────────────────────────────────────────────────┘    │
 │                              │                                       │
 │         ┌────────────────────┼────────────────────┐                  │
@@ -230,6 +276,40 @@
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+### MCP Server (`@reaatech/llm-cost-telemetry-mcp`)
+
+Exposes LLM cost telemetry as MCP tools for agent integration.
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                Three-Layer MCP Tool Architecture                     │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │         Layer 1: cost.span.* (Atomic Operations)             │    │
+│  │  ┌────────────┐    ┌────────────┐    ┌────────────┐         │    │
+│  │  │   record   │    │    get     │    │   flush    │         │    │
+│  │  └────────────┘    └────────────┘    └────────────┘         │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                              ▼                                       │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │         Layer 2: cost.aggregate.* (Aggregation)              │    │
+│  │  ┌─────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐        │    │
+│  │  │by_tenant│ │by_feature│ │ by_route │ │ summary  │        │    │
+│  │  └─────────┘ └──────────┘ └──────────┘ └──────────┘        │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                              ▼                                       │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │         Layer 3: cost.budget.* (Budget Management)           │    │
+│  │  ┌────────────┐    ┌────────────┐    ┌────────────┐         │    │
+│  │  │   check    │    │    set     │    │   alert    │         │    │
+│  │  └────────────┘    └────────────┘    └────────────┘         │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                                                                      │
+│  Internally wired: CostCollector → calculateCost → CostAggregator   │
+│  + BudgetManager. Spans flushed via onSpanFlush callback.            │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## Data Flow
@@ -239,44 +319,44 @@
 ```
 1. Application calls wrapped provider SDK
    (e.g., wrappedOpenAI.chat.completions.create())
-         │
+                  │
 2. Wrapper intercepts request:
    - Extract model, messages, metadata
    - Capture telemetry context (tenant, feature, route)
-         │
+                  │
 3. Forward request to actual provider SDK
-         │
+                  │
 4. Provider returns response:
    - Extract usage (input_tokens, output_tokens)
    - Handle streaming responses (aggregate chunks)
-         │
-5. Calculate cost:
+                  │
+5. Calculate cost via @reaatech/llm-cost-telemetry-calculator:
    - Look up model pricing
    - Calculate input + output costs
    - Apply cache discounts (if applicable)
-         │
+                  │
 6. Create cost span:
    - Span ID, trace ID
    - Timestamp, duration
    - Provider, model, tokens, cost
    - Aggregation dimensions
-         │
-7. Buffer span in aggregation engine:
+                  │
+7. Buffer span in CostCollector (@reaatech/llm-cost-telemetry-aggregation):
    - In-memory buffer
    - Configurable flush interval
-         │
+                  │
 8. Aggregate by dimensions:
    - By tenant
    - By feature
    - By route
    - Time-windowed
-         │
-9. Export to backends:
+                  │
+9. Export to backends (@reaatech/llm-cost-telemetry-exporters):
    - CloudWatch (AWS)
    - Cloud Monitoring (GCP)
    - Phoenix/Loki (Grafana)
-         │
-10. Emit observability data:
+                  │
+10. Emit observability data (@reaatech/llm-cost-telemetry-observability):
     - OTel spans and metrics
     - Structured logs
 ```
@@ -324,23 +404,23 @@
 
 ### Tracing
 
-Every LLM call generates OpenTelemetry spans:
+Every LLM call generates OpenTelemetry spans via `@reaatech/llm-cost-telemetry-observability`:
 
 | Span | Attributes |
 |------|------------|
-| `llm.call` | provider, model, input_tokens, output_tokens, cost_usd |
-| `llm.cost.calculate` | model, tokens, pricing_tier |
-| `llm.cost.export` | exporter, batch_size, status |
+| `gen_ai.client.call` | provider, model, input_tokens, output_tokens, cost_usd |
+| `gen_ai.client.cost.calculate` | model, tokens, pricing_tier |
+| `gen_ai.client.cost.export` | exporter, batch_size, status |
 
 ### Metrics
 
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|
-| `llm.cost.tokens` | Counter | `provider`, `model`, `type` | Token usage |
-| `llm.cost.amount` | Histogram | `provider`, `model`, `tenant` | Cost in USD |
-| `llm.cost.calls` | Counter | `provider`, `model`, `status` | API calls |
-| `llm.cost.errors` | Counter | `provider`, `error_type` | Errors |
-| `llm.budget.utilization` | Gauge | `tenant` | Budget usage % |
+| `gen_ai.client.token.use` | Counter | `provider`, `model`, `type` | Token usage |
+| `gen_ai.client.operation.duration` | Histogram | `provider`, `model`, `tenant` | Cost in USD |
+| `gen_ai.client.operation.calls` | Counter | `provider`, `model`, `status` | API calls |
+| `gen_ai.client.operation.errors` | Counter | `provider`, `error_type` | Error count |
+| `llm.budget.utilization` | UpDownCounter | `tenant` | Budget usage % |
 
 ### Logging
 
@@ -348,7 +428,7 @@ All logs are structured JSON with standard fields:
 
 ```json
 {
-  "timestamp": "2026-04-15T23:00:00Z",
+  "timestamp": "2026-04-30T17:00:00.000Z",
   "service": "llm-cost-telemetry",
   "span_id": "abc123",
   "trace_id": "def456",
@@ -366,59 +446,17 @@ All logs are structured JSON with standard fields:
 
 ---
 
-## Deployment Architecture
+## Build & Toolchain
 
-### AWS (CloudWatch)
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         AWS Deployment                               │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │                   Application (EC2/Lambda/ECS)                │    │
-│  │  ┌───────────────────────────────────────────────────────┐  │    │
-│  │  │              llm-cost-telemetry Library                 │  │    │
-│  │  │  ┌───────────┐  ┌───────────┐  ┌───────────┐          │  │    │
-│  │  │  │ Provider  │  │    Cost   │  │CloudWatch │          │  │    │
-│  │  │  │ Wrappers  │  │ Calculator│  │ Exporter  │          │  │    │
-│  │  │  └───────────┘  └───────────┘  └───────────┘          │  │    │
-│  │  └───────────────────────────────────────────────────────┘  │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│                              │                                       │
-│                              ▼                                       │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │                      CloudWatch                              │    │
-│  │  - CloudWatch Metrics (PutMetricData)                        │    │
-│  │  - CloudWatch Logs (EMF format for Logs Insights)            │    │
-│  │  - CloudWatch Alarms (budget alerts)                         │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### GCP (Cloud Monitoring)
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         GCP Deployment                               │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │                 Application (GCE/Cloud Run/GKE)               │    │
-│  │  ┌───────────────────────────────────────────────────────┐  │    │
-│  │  │              llm-cost-telemetry Library                 │  │    │
-│  │  │  ┌───────────┐  ┌───────────┐  ┌──────────────────┐  │  │    │
-│  │  │  │ Provider  │  │    Cost   │  │ Cloud Monitoring │  │  │    │
-│  │  │  │ Wrappers  │  │ Calculator│  │    Exporter      │  │  │    │
-│  │  │  └───────────┘  └───────────┘  └──────────────────┘  │  │    │
-│  │  └───────────────────────────────────────────────────────┘  │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│                              │                                       │
-│                              ▼                                       │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │                   Cloud Monitoring                           │    │
-│  │  - Custom Metrics (Time Series API)                          │    │
-│  │  - Dashboards (cost by tenant/feature)                       │    │
-│  │  - Alerting Policies (budget alerts)                         │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Tool | Purpose |
+|------|---------|
+| **pnpm** | Package manager with workspaces |
+| **Turborepo** | Monorepo task orchestration |
+| **tsup** | Per-package build (dual CJS/ESM) |
+| **Biome** | Lint and format |
+| **Vitest** | Test runner |
+| **Changesets** | Versioning and changelog generation |
+| **TypeScript 5.8** | Strict mode with `verbatimModuleSyntax` |
 
 ---
 
@@ -438,7 +476,6 @@ All logs are structured JSON with standard fields:
 ## References
 
 - **AGENTS.md** — Agent development guide
-- **DEV_PLAN.md** — Development checklist
 - **README.md** — Quick start and overview
 - **MCP Specification** — https://modelcontextprotocol.io/
 - **OpenTelemetry Semantic Conventions** — https://opentelemetry.io/docs/specs/semconv/

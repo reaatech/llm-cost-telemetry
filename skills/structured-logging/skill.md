@@ -16,7 +16,7 @@ Structured logging provides JSON-formatted log output with automatic PII redacti
 ### Get the Default Logger
 
 ```typescript
-import { getLogger } from 'llm-cost-telemetry';
+import { getLogger } from '@reaatech/llm-cost-telemetry-observability';
 
 const logger = getLogger();
 
@@ -28,7 +28,7 @@ logger.logInfo('Telemetry initialized');
 ### Create a Custom Logger
 
 ```typescript
-import { CostLogger } from 'llm-cost-telemetry';
+import { CostLogger } from '@reaatech/llm-cost-telemetry-observability';
 
 const logger = new CostLogger({
   level: process.env.LOG_LEVEL ?? 'info',
@@ -39,7 +39,7 @@ const logger = new CostLogger({
 ### Log Cost Spans
 
 ```typescript
-import { getLogger } from 'llm-cost-telemetry';
+import { getLogger } from '@reaatech/llm-cost-telemetry-observability';
 
 const logger = getLogger();
 

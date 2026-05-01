@@ -16,7 +16,7 @@ Cost optimization uses the library's built-in tools to identify opportunities to
 ### Compare Model Costs
 
 ```typescript
-import { compareModelCosts } from 'llm-cost-telemetry';
+import { compareModelCosts } from '@reaatech/llm-cost-telemetry-calculator';
 
 // Compare costs between models for the same workload
 const comparison = compareModelCosts({
@@ -38,7 +38,7 @@ comparison.forEach(rec => {
 ### Calculate Potential Savings
 
 ```typescript
-import { calculateSavings } from 'llm-cost-telemetry';
+import { calculateSavings } from '@reaatech/llm-cost-telemetry-calculator';
 
 // Calculate savings from switching models
 const savings = calculateSavings({
@@ -56,7 +56,7 @@ console.log(`Savings: $${savings.savings} (${savings.savingsPercentage}%)`);
 ### Use Cache-Aware Pricing (Anthropic)
 
 ```typescript
-import { calculateCost } from 'llm-cost-telemetry';
+import { calculateCost } from '@reaatech/llm-cost-telemetry-calculator';
 
 // With prompt caching enabled
 const cachedCost = calculateCost({
@@ -75,7 +75,7 @@ console.log(`Cache read savings: $${cachedCost.breakdown.cacheReadCostUsd ?? 0}`
 ### Analyze Costs by Dimension
 
 ```typescript
-import { CostAggregator } from 'llm-cost-telemetry';
+import { CostAggregator } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const aggregator = new CostAggregator();
 
@@ -94,7 +94,7 @@ for (const [dim, data] of Object.entries(summary.byDimension ?? {})) {
 ### Set Budget Limits
 
 ```typescript
-import { BudgetManager } from 'llm-cost-telemetry';
+import { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const budgetManager = new BudgetManager({
   global: { daily: 500.00, monthly: 10000.00 },

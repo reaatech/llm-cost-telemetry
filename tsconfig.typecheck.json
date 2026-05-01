@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@reaatech/llm-cost-telemetry": ["./packages/core/src/index.ts"],
+      "@reaatech/llm-cost-telemetry-calculator": ["./packages/calculator/src/index.ts"],
+      "@reaatech/llm-cost-telemetry-providers": ["./packages/providers/src/index.ts"],
+      "@reaatech/llm-cost-telemetry-aggregation": ["./packages/aggregation/src/index.ts"],
+      "@reaatech/llm-cost-telemetry-observability": ["./packages/observability/src/index.ts"],
+      "@reaatech/llm-cost-telemetry-exporters": ["./packages/exporters/src/index.ts"],
+      "@reaatech/llm-cost-telemetry-mcp": ["./packages/mcp/src/index.ts"],
+      "@reaatech/llm-cost-telemetry-cli": ["./packages/cli/src/index.ts"]
+    }
+  },
+  "include": ["packages/*/src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "*.config.js", "**/*.test.ts"]
+}
