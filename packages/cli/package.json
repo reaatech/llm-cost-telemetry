@@ -41,7 +41,7 @@
     "@reaatech/llm-cost-telemetry": "workspace:*",
     "@reaatech/llm-cost-telemetry-aggregation": "workspace:*",
     "@reaatech/llm-cost-telemetry-exporters": "workspace:*",
-    "commander": "^12.1.0"
+    "commander": "^14.0.3"
   },
   "devDependencies": {
     "@reaatech/llm-cost-telemetry-calculator": "workspace:*",
