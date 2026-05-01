@@ -39,7 +39,7 @@
     "@reaatech/llm-cost-telemetry": "workspace:*",
     "@reaatech/llm-cost-telemetry-calculator": "workspace:*",
     "@reaatech/llm-cost-telemetry-aggregation": "workspace:*",
-    "zod": "^3.24.2"
+    "zod": "^4.4.1"
   },
   "devDependencies": {
     "tsup": "^8.4.0",
