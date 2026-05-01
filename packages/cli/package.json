@@ -1,0 +1,52 @@
+{
+  "name": "@reaatech/llm-cost-telemetry-cli",
+  "version": "0.1.0",
+  "description": "CLI for LLM cost telemetry — reporting, budget checking, and export triggering",
+  "license": "MIT",
+  "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reaatech/llm-cost-telemetry.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/reaatech/llm-cost-telemetry/tree/main/packages/cli#readme",
+  "bugs": {
+    "url": "https://github.com/reaatech/llm-cost-telemetry/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "llm-cost-telemetry": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts src/cli.ts --format cjs,esm --dts --clean",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@reaatech/llm-cost-telemetry": "workspace:*",
+    "@reaatech/llm-cost-telemetry-aggregation": "workspace:*",
+    "@reaatech/llm-cost-telemetry-exporters": "workspace:*",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@reaatech/llm-cost-telemetry-calculator": "workspace:*",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  }
+}
