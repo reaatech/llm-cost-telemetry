@@ -1,13 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import type { Provider } from '@reaatech/llm-cost-telemetry';
+import { describe, expect, it } from 'vitest';
 import {
-  countOpenAITokens,
+  calculateTotalTokens,
   countAnthropicTokens,
+  countFunctionTokens,
   countGoogleTokens,
   countMessageTokens,
+  countOpenAITokens,
   countText,
   estimateOutputTokens,
-  countFunctionTokens,
-  calculateTotalTokens,
 } from './tokens.js';
 
 describe('Token Counting', () => {
@@ -62,7 +63,7 @@ describe('Token Counting', () => {
     });
 
     it('should use estimation for unknown provider', async () => {
-      const result = await countText('unknown' as any, 'model-1', 'Hello');
+      const result = await countText('unknown' as Provider, 'model-1', 'Hello');
       expect(result.tokens).toBeGreaterThan(0);
       expect(result.estimated).toBe(true);
     });

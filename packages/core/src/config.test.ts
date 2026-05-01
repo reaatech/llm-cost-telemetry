@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
-  loadTelemetryConfig,
-  loadBudgetConfig,
-  loadCloudWatchConfig,
-  loadCloudMonitoringConfig,
-  loadPhoenixConfig,
-  loadConfig,
   DEFAULT_CONFIG,
+  loadBudgetConfig,
+  loadCloudMonitoringConfig,
+  loadCloudWatchConfig,
+  loadConfig,
+  loadPhoenixConfig,
+  loadTelemetryConfig,
 } from '@reaatech/llm-cost-telemetry';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 describe('Config', () => {
   const originalEnv = process.env;

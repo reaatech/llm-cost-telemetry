@@ -1,14 +1,14 @@
 #!/usr/bin/env node
+import { loadConfig } from '@reaatech/llm-cost-telemetry';
+import { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
 /**
  * CLI entry point for llm-cost-telemetry
  */
 import { Command } from 'commander';
-import { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
-import { loadConfig } from '@reaatech/llm-cost-telemetry';
-import { generateReport, formatReport } from './commands/report.command.js';
-import { checkBudget, formatBudgetStatus } from './commands/check.command.js';
-import { loadSpansInput } from './input.js';
 import packageJson from '../package.json' with { type: 'json' };
+import { checkBudget, formatBudgetStatus } from './commands/check.command.js';
+import { formatReport, generateReport } from './commands/report.command.js';
+import { loadSpansInput } from './input.js';
 
 /* eslint-disable no-console */
 
@@ -69,8 +69,8 @@ program
   .option('--threshold <threshold>', 'Alert threshold (0-1)', '0.8')
   .option('-f, --format <format>', 'Output format (json, text)', 'json')
   .action(async (options) => {
-    const threshold = parseFloat(options.threshold);
-    if (isNaN(threshold) || threshold < 0 || threshold > 1) {
+    const threshold = Number.parseFloat(options.threshold);
+    if (Number.isNaN(threshold) || threshold < 0 || threshold > 1) {
       console.error('Threshold must be a number between 0 and 1');
       process.exit(1);
     }
@@ -100,8 +100,9 @@ program
   .option('--dry-run', 'Build records without sending them to an exporter')
   .action(async (options) => {
     const config = loadConfig();
-    const { buildExportPayload, triggerExport, formatExportResult } =
-      await import('./commands/export.command.js');
+    const { buildExportPayload, triggerExport, formatExportResult } = await import(
+      './commands/export.command.js'
+    );
     const spans = await loadSpansInput(options.input);
     if (spans.length === 0) {
       console.error('No spans found. Pass --input or pipe a JSON array of cost spans to stdin.');
@@ -109,6 +110,7 @@ program
     }
     const records = buildExportPayload(spans);
 
+    // biome-ignore lint/suspicious/noImplicitAnyLet: dynamically typed via switch-case
     let exporter;
     if (!options.dryRun) {
       switch (options.exporter) {
@@ -119,7 +121,9 @@ program
           break;
         }
         case 'cloud-monitoring': {
-          const { CloudMonitoringExporter } = await import('@reaatech/llm-cost-telemetry-exporters');
+          const { CloudMonitoringExporter } = await import(
+            '@reaatech/llm-cost-telemetry-exporters'
+          );
           const cmConfig = config.cloudMonitoring;
           exporter = new CloudMonitoringExporter(cmConfig);
           break;
@@ -150,7 +154,8 @@ program
           durationMs: 0,
           errors: [],
         }
-      : await triggerExport(exporter!, records, {
+      : // biome-ignore lint/style/noNonNullAssertion: guarded by check at line 142
+        await triggerExport(exporter!, records, {
           exporter: options.exporter,
           period: options.period,
         });

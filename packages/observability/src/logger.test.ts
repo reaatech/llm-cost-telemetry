@@ -1,8 +1,8 @@
+import { CostLogger, getLogger } from '@reaatech/llm-cost-telemetry-observability';
 /**
  * Unit tests for structured logger
  */
-import { describe, it, expect, beforeEach } from 'vitest';
-import { CostLogger, getLogger } from '@reaatech/llm-cost-telemetry-observability';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 describe('CostLogger', () => {
   let logger: CostLogger;

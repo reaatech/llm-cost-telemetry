@@ -1,29 +1,29 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
+  batchArray,
+  calculateCostFromTokens,
+  clamp,
+  deepClone,
+  deepMerge,
+  formatISODate,
   generateId,
+  getEnvBool,
+  getEnvFloat,
+  getEnvInt,
+  getEnvVar,
+  getWindowEnd,
+  getWindowStart,
+  isEmpty,
   now,
   nowMs,
-  sleep,
-  getWindowStart,
-  getWindowEnd,
-  formatISODate,
   parseISODate,
-  clamp,
   percentage,
-  roundTo,
-  calculateCostFromTokens,
-  deepClone,
-  isEmpty,
-  deepMerge,
   retryWithBackoff,
-  batchArray,
+  roundTo,
   sanitizeLabel,
   simpleHash,
-  getEnvVar,
-  getEnvInt,
-  getEnvFloat,
-  getEnvBool,
+  sleep,
 } from '@reaatech/llm-cost-telemetry';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 describe('Utils', () => {
   describe('generateId', () => {
@@ -181,7 +181,7 @@ describe('Utils', () => {
 
   describe('roundTo', () => {
     it('should round to 2 decimal places', () => {
-      expect(roundTo(3.14159, 2)).toBe(3.14);
+      expect(roundTo(Math.PI, 2)).toBe(3.14);
     });
 
     it('should round to 0 decimal places', () => {
@@ -224,7 +224,7 @@ describe('Utils', () => {
   describe('deepMerge', () => {
     it('should merge objects deeply', () => {
       const target = { a: 1, b: { c: 2, d: 3 } };
-      const source = { b: { c: 99 } } as any;
+      const source = { b: { c: 99 } } as unknown;
       const result = deepMerge(target, source);
       expect(result.a).toBe(1);
       expect(result.b.c).toBe(99);

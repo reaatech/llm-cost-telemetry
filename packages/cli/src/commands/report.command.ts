@@ -1,8 +1,11 @@
+import type { CostSpan, CostSummary, TimeWindow } from '@reaatech/llm-cost-telemetry';
 /**
  * Report command — Generate cost reports
  */
-import { CostAggregator, type AggregationDimension } from '@reaatech/llm-cost-telemetry-aggregation';
-import type { CostSpan, CostSummary, TimeWindow } from '@reaatech/llm-cost-telemetry';
+import {
+  type AggregationDimension,
+  CostAggregator,
+} from '@reaatech/llm-cost-telemetry-aggregation';
 
 export interface ReportOptions {
   tenant?: string;
@@ -79,7 +82,7 @@ export function formatReport(summary: CostSummary, format: 'json' | 'table'): st
 
 function replacer(key: string, value: unknown): unknown {
   if (typeof value === 'number' && key.endsWith('Usd')) {
-    return parseFloat(value.toFixed(6));
+    return Number.parseFloat(value.toFixed(6));
   }
   return value;
 }

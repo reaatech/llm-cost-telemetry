@@ -2,7 +2,7 @@
  * Base exporter interface
  * All exporters extend this abstract class
  */
-import type { CostSpan, CostRecord, RetryConfig } from '@reaatech/llm-cost-telemetry';
+import type { CostRecord, CostSpan, RetryConfig } from '@reaatech/llm-cost-telemetry';
 import { retryWithBackoff } from '@reaatech/llm-cost-telemetry';
 
 /**

@@ -1,12 +1,12 @@
+import type { Counter, Histogram, UpDownCounter } from '@opentelemetry/api';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 /**
  * OpenTelemetry metrics integration
  */
 import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import type { PushMetricExporter } from '@opentelemetry/sdk-metrics';
-import { resourceFromAttributes } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
-import type { Counter, Histogram, UpDownCounter } from '@opentelemetry/api';
-import type { TelemetryConfig, CostSpan } from '@reaatech/llm-cost-telemetry';
+import type { CostSpan, TelemetryConfig } from '@reaatech/llm-cost-telemetry';
 
 export interface MetricsOptions extends Partial<TelemetryConfig> {
   serviceName?: string;

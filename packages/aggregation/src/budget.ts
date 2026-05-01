@@ -1,8 +1,13 @@
 /**
  * Budget tracking and enforcement
  */
-import type { BudgetConfig, BudgetStatus, AlertAction, TelemetryContext } from '@reaatech/llm-cost-telemetry';
-import { roundTo, percentage } from '@reaatech/llm-cost-telemetry';
+import type {
+  AlertAction,
+  BudgetConfig,
+  BudgetStatus,
+  TelemetryContext,
+} from '@reaatech/llm-cost-telemetry';
+import { percentage, roundTo } from '@reaatech/llm-cost-telemetry';
 
 /**
  * Budget tracking state for a tenant
@@ -150,8 +155,8 @@ export class BudgetManager {
     const tenantLimits = this.config.tenants?.[tenant];
 
     return {
-      daily: tenantLimits?.daily ?? this.config.global?.daily ?? Infinity,
-      monthly: tenantLimits?.monthly ?? this.config.global?.monthly ?? Infinity,
+      daily: tenantLimits?.daily ?? this.config.global?.daily ?? Number.POSITIVE_INFINITY,
+      monthly: tenantLimits?.monthly ?? this.config.global?.monthly ?? Number.POSITIVE_INFINITY,
     };
   }
 

@@ -1,8 +1,8 @@
+import type { BudgetStatus } from '@reaatech/llm-cost-telemetry';
 /**
  * Check command — Check budget status
  */
 import type { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
-import type { BudgetStatus } from '@reaatech/llm-cost-telemetry';
 
 export interface CheckOptions {
   tenant: string;

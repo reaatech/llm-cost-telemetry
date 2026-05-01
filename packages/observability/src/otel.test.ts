@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import type { CostSpan } from '@reaatech/llm-cost-telemetry';
 import { MetricsManager } from '@reaatech/llm-cost-telemetry-observability';
 import { TracingManager } from '@reaatech/llm-cost-telemetry-observability';
-import type { CostSpan } from '@reaatech/llm-cost-telemetry';
+import { describe, expect, it } from 'vitest';
 
 function createTestSpan(overrides: Partial<CostSpan> = {}): CostSpan {
   const now = new Date();
@@ -100,8 +100,8 @@ describe('OpenTelemetry', () => {
 
     it('should apply default options', () => {
       const manager = new MetricsManager();
-      expect(manager['options'].serviceName).toBe('llm-cost-telemetry');
-      expect(manager['options'].exportIntervalMs).toBe(60000);
+      expect(manager.options.serviceName).toBe('llm-cost-telemetry');
+      expect(manager.options.exportIntervalMs).toBe(60000);
     });
 
     it('should merge custom options', () => {
@@ -109,8 +109,8 @@ describe('OpenTelemetry', () => {
         serviceName: 'custom-service',
         exportIntervalMs: 30000,
       });
-      expect(manager['options'].serviceName).toBe('custom-service');
-      expect(manager['options'].exportIntervalMs).toBe(30000);
+      expect(manager.options.serviceName).toBe('custom-service');
+      expect(manager.options.exportIntervalMs).toBe(30000);
     });
   });
 
@@ -175,8 +175,8 @@ describe('OpenTelemetry', () => {
 
     it('should apply default options', () => {
       const manager = new TracingManager();
-      expect(manager['options'].serviceName).toBe('llm-cost-telemetry');
-      expect(manager['options'].enabled).toBe(true);
+      expect(manager.options.serviceName).toBe('llm-cost-telemetry');
+      expect(manager.options.enabled).toBe(true);
     });
 
     it('should merge custom options', () => {
@@ -184,8 +184,8 @@ describe('OpenTelemetry', () => {
         serviceName: 'custom-tracer',
         exporterEndpoint: 'http://custom:4318',
       });
-      expect(manager['options'].serviceName).toBe('custom-tracer');
-      expect(manager['options'].exporterEndpoint).toBe('http://custom:4318');
+      expect(manager.options.serviceName).toBe('custom-tracer');
+      expect(manager.options.exporterEndpoint).toBe('http://custom:4318');
     });
   });
 });

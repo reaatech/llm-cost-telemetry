@@ -1,9 +1,9 @@
+import type { BudgetConfig } from '@reaatech/llm-cost-telemetry';
+import { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
 /**
  * Unit tests for budget management
  */
-import { describe, it, expect } from 'vitest';
-import { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
-import type { BudgetConfig } from '@reaatech/llm-cost-telemetry';
+import { describe, expect, it } from 'vitest';
 
 describe('Budget Manager', () => {
   const createBudgetConfig = (): BudgetConfig => ({

@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { CostRecord, CostSpan } from '@reaatech/llm-cost-telemetry';
 import { BaseExporter } from '@reaatech/llm-cost-telemetry-exporters';
 import { CloudWatchExporter } from '@reaatech/llm-cost-telemetry-exporters';
 import { CloudMonitoringExporter } from '@reaatech/llm-cost-telemetry-exporters';
 import { PhoenixExporter } from '@reaatech/llm-cost-telemetry-exporters';
-import type { CostSpan, CostRecord } from '@reaatech/llm-cost-telemetry';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 function createTestSpan(overrides: Partial<CostSpan> = {}): CostSpan {
   const now = new Date();
@@ -112,7 +112,7 @@ describe('Exporters', () => {
       const first = exporter.exportWithRetry([createTestSpan()]);
       const second = exporter.exportWithRetry([createTestSpan()]);
 
-      resolveFirst!();
+      resolveFirst?.();
 
       const secondResult = await second;
       expect(secondResult.error).toContain('flushing');
@@ -151,7 +151,7 @@ describe('Exporters', () => {
     it('should export spans to CloudWatch', async () => {
       const exporter = new CloudWatchExporter({ region: 'us-east-1' });
 
-      const sendSpy = vi.spyOn(exporter['client'], 'send').mockResolvedValue({} as any);
+      const sendSpy = vi.spyOn(exporter.client, 'send').mockResolvedValue({} as unknown);
 
       const spans = [createTestSpan({ telemetry: { tenant: 'acme', feature: 'chat' } })];
 
@@ -162,7 +162,7 @@ describe('Exporters', () => {
 
     it('should handle export failures', async () => {
       const exporter = new CloudWatchExporter({ region: 'us-east-1' });
-      vi.spyOn(exporter['client'], 'send').mockRejectedValue(new Error('AWS error'));
+      vi.spyOn(exporter.client, 'send').mockRejectedValue(new Error('AWS error'));
 
       const result = await exporter.exportSpans([createTestSpan()]);
       expect(result.failed).toBe(1);
@@ -178,7 +178,7 @@ describe('Exporters', () => {
 
     it('should export records to CloudWatch', async () => {
       const exporter = new CloudWatchExporter({ region: 'us-east-1' });
-      const sendSpy = vi.spyOn(exporter['client'], 'send').mockResolvedValue({} as any);
+      const sendSpy = vi.spyOn(exporter.client, 'send').mockResolvedValue({} as unknown);
 
       const records = [createTestRecord()];
       const result = await exporter.exportRecords(records);
@@ -188,7 +188,7 @@ describe('Exporters', () => {
 
     it('should handle record export failures', async () => {
       const exporter = new CloudWatchExporter({ region: 'us-east-1' });
-      vi.spyOn(exporter['client'], 'send').mockRejectedValue(new Error('fail'));
+      vi.spyOn(exporter.client, 'send').mockRejectedValue(new Error('fail'));
 
       const result = await exporter.exportRecords([createTestRecord()]);
       expect(result.failed).toBe(1);
@@ -218,8 +218,8 @@ describe('Exporters', () => {
     it('should export spans to Cloud Monitoring', async () => {
       const exporter = new CloudMonitoringExporter({ projectId: 'test-project' });
       const createTimeSeriesSpy = vi
-        .spyOn(exporter['client'], 'createTimeSeries')
-        .mockResolvedValue({} as any);
+        .spyOn(exporter.client, 'createTimeSeries')
+        .mockResolvedValue({} as unknown);
 
       const spans = [createTestSpan({ telemetry: { tenant: 'acme' } })];
 
@@ -230,7 +230,7 @@ describe('Exporters', () => {
 
     it('should handle export failures', async () => {
       const exporter = new CloudMonitoringExporter({ projectId: 'test-project' });
-      vi.spyOn(exporter['client'], 'createTimeSeries').mockRejectedValue(new Error('GCP error'));
+      vi.spyOn(exporter.client, 'createTimeSeries').mockRejectedValue(new Error('GCP error'));
 
       const result = await exporter.exportSpans([createTestSpan()]);
       expect(result.failed).toBe(1);
@@ -244,7 +244,7 @@ describe('Exporters', () => {
 
     it('should export records to Cloud Monitoring', async () => {
       const exporter = new CloudMonitoringExporter({ projectId: 'test-project' });
-      vi.spyOn(exporter['client'], 'createTimeSeries').mockResolvedValue({} as any);
+      vi.spyOn(exporter.client, 'createTimeSeries').mockResolvedValue({} as unknown);
 
       const records = [createTestRecord()];
       const result = await exporter.exportRecords(records);
@@ -253,7 +253,7 @@ describe('Exporters', () => {
 
     it('should handle record export failures', async () => {
       const exporter = new CloudMonitoringExporter({ projectId: 'test-project' });
-      vi.spyOn(exporter['client'], 'createTimeSeries').mockRejectedValue(new Error('fail'));
+      vi.spyOn(exporter.client, 'createTimeSeries').mockRejectedValue(new Error('fail'));
 
       const result = await exporter.exportRecords([createTestRecord()]);
       expect(result.failed).toBe(1);
@@ -272,7 +272,7 @@ describe('Exporters', () => {
 
     it('should use default project name when no projectId', () => {
       const exporter = new CloudMonitoringExporter();
-      expect(exporter['projectName']).toBe('projects/your-project-id');
+      expect(exporter.projectName).toBe('projects/your-project-id');
     });
   });
 
@@ -342,7 +342,7 @@ describe('Exporters', () => {
 
       const fetchCall = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       const headers = fetchCall[1].headers as Record<string, string>;
-      expect(headers['Authorization']).toContain('Basic');
+      expect(headers.Authorization).toContain('Basic');
     });
 
     it('should throw on non-ok response', async () => {

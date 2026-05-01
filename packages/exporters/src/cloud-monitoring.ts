@@ -3,9 +3,9 @@
  * Exports metrics to Cloud Monitoring using Time Series API
  */
 import { MetricServiceClient } from '@google-cloud/monitoring';
-import { BaseExporter, type ExportResult } from './base.js';
-import type { CostSpan, CostRecord, RetryConfig } from '@reaatech/llm-cost-telemetry';
+import type { CostRecord, CostSpan, RetryConfig } from '@reaatech/llm-cost-telemetry';
 import { getLogger } from '@reaatech/llm-cost-telemetry-observability';
+import { BaseExporter, type ExportResult } from './base.js';
 
 /**
  * Cloud Monitoring exporter options

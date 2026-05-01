@@ -2,7 +2,7 @@
  * Base provider wrapper interface
  * All provider wrappers extend this abstract class
  */
-import type { Provider, CostSpan, TelemetryContext } from '@reaatech/llm-cost-telemetry';
+import type { CostSpan, Provider, TelemetryContext } from '@reaatech/llm-cost-telemetry';
 import { generateId } from '@reaatech/llm-cost-telemetry';
 
 /**

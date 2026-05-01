@@ -1,21 +1,21 @@
+import type {
+  BudgetConfig,
+  CloudMonitoringConfig,
+  CloudWatchConfig,
+  PhoenixConfig,
+  TelemetryConfig,
+} from './domain.js';
+import {
+  BudgetConfigSchema,
+  CloudMonitoringConfigSchema,
+  CloudWatchConfigSchema,
+  PhoenixConfigSchema,
+  TelemetryConfigSchema,
+} from './schemas.js';
 /**
  * Configuration management from environment variables
  */
-import { getEnvVar, getEnvInt, getEnvFloat, getEnvBool } from './utils.js';
-import type {
-  TelemetryConfig,
-  BudgetConfig,
-  CloudWatchConfig,
-  CloudMonitoringConfig,
-  PhoenixConfig,
-} from './domain.js';
-import {
-  TelemetryConfigSchema,
-  BudgetConfigSchema,
-  CloudWatchConfigSchema,
-  CloudMonitoringConfigSchema,
-  PhoenixConfigSchema,
-} from './schemas.js';
+import { getEnvBool, getEnvFloat, getEnvInt, getEnvVar } from './utils.js';
 
 /**
  * Load telemetry configuration from environment variables

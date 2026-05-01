@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { execFile } from 'child_process';
-import { mkdtempSync, writeFileSync } from 'fs';
-import { tmpdir } from 'os';
-import { join, resolve } from 'path';
-import { promisify } from 'util';
+import { execFile } from 'node:child_process';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { promisify } from 'node:util';
+import { describe, expect, it } from 'vitest';
 
 const execFileAsync = promisify(execFile);
 

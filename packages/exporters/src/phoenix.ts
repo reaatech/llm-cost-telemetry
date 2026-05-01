@@ -1,10 +1,10 @@
+import type { CostRecord, CostSpan, RetryConfig } from '@reaatech/llm-cost-telemetry';
+import { getLogger } from '@reaatech/llm-cost-telemetry-observability';
 /**
  * Grafana Phoenix/Loki exporter for cost telemetry
  * Exports metrics to Loki using the Push API
  */
 import { BaseExporter, type ExportResult } from './base.js';
-import type { CostSpan, CostRecord, RetryConfig } from '@reaatech/llm-cost-telemetry';
-import { getLogger } from '@reaatech/llm-cost-telemetry-observability';
 
 /**
  * Loki log entry format
@@ -204,7 +204,7 @@ export class PhoenixExporter extends BaseExporter {
       const auth = Buffer.from(
         `${this.phoenixOptions.username}:${this.phoenixOptions.password}`,
       ).toString('base64');
-      headers['Authorization'] = `Basic ${auth}`;
+      headers.Authorization = `Basic ${auth}`;
     }
 
     const response = await fetch(url, {

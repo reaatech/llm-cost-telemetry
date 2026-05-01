@@ -1,9 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
+import type { CostSpan, TelemetryContext } from '@reaatech/llm-cost-telemetry';
 import { BaseProviderWrapper } from '@reaatech/llm-cost-telemetry-providers';
 import { OpenAIWrapper } from '@reaatech/llm-cost-telemetry-providers';
 import { AnthropicWrapper } from '@reaatech/llm-cost-telemetry-providers';
 import { GoogleGenerativeAIWrapper } from '@reaatech/llm-cost-telemetry-providers';
-import type { CostSpan, TelemetryContext } from '@reaatech/llm-cost-telemetry';
+import { describe, expect, it, vi } from 'vitest';
 
 class TestProviderWrapper extends BaseProviderWrapper<Record<string, unknown>> {
   get provider(): 'openai' {
@@ -25,20 +25,20 @@ describe('Providers', () => {
       wrapper.onSpan(callback);
 
       const span = { id: 'test' } as unknown as CostSpan;
-      wrapper['emitSpan'](span);
+      wrapper.emitSpan(span);
       expect(callback).toHaveBeenCalledWith(span);
     });
 
     it('should not throw when emitting without callback', () => {
       const wrapper = new TestProviderWrapper({});
-      expect(() => wrapper['emitSpan']({ id: 'test' } as unknown as CostSpan)).not.toThrow();
+      expect(() => wrapper.emitSpan({ id: 'test' } as unknown as CostSpan)).not.toThrow();
     });
 
     it('should set default context', () => {
       const wrapper = new TestProviderWrapper({});
       const ctx: Partial<TelemetryContext> = { tenant: 'acme' };
       wrapper.setDefaultContext(ctx);
-      expect(wrapper['defaultContext']).toEqual(ctx);
+      expect(wrapper.defaultContext).toEqual(ctx);
     });
 
     it('should create a span from request and response metadata', () => {
@@ -46,7 +46,7 @@ describe('Providers', () => {
       const startTime = new Date();
       const endTime = new Date(startTime.getTime() + 100);
 
-      const span = wrapper['createSpan'](
+      const span = wrapper.createSpan(
         { model: 'gpt-4', params: {}, telemetry: { tenant: 'acme' }, startTime },
         { inputTokens: 100, outputTokens: 50, endTime },
       );
@@ -67,7 +67,7 @@ describe('Providers', () => {
       const startTime = new Date();
       const endTime = new Date();
 
-      const span = wrapper['createSpan'](
+      const span = wrapper.createSpan(
         { model: 'gpt-4', params: {}, telemetry: { tenant: 'override-tenant' }, startTime },
         { inputTokens: 0, outputTokens: 0, endTime },
       );
@@ -79,7 +79,7 @@ describe('Providers', () => {
     describe('extractTelemetryContext', () => {
       it('should extract telemetry context from options', () => {
         const wrapper = new TestProviderWrapper({});
-        const result = wrapper['extractTelemetryContext']({
+        const result = wrapper.extractTelemetryContext({
           telemetry: { tenant: 'acme', feature: 'chat', route: '/api/chat' },
         });
         expect(result).toEqual({ tenant: 'acme', feature: 'chat', route: '/api/chat' });
@@ -87,19 +87,19 @@ describe('Providers', () => {
 
       it('should return undefined for no telemetry', () => {
         const wrapper = new TestProviderWrapper({});
-        const result = wrapper['extractTelemetryContext']({});
+        const result = wrapper.extractTelemetryContext({});
         expect(result).toBeUndefined();
       });
 
       it('should return undefined for empty telemetry object', () => {
         const wrapper = new TestProviderWrapper({});
-        const result = wrapper['extractTelemetryContext']({ telemetry: {} });
+        const result = wrapper.extractTelemetryContext({ telemetry: {} });
         expect(result).toBeUndefined();
       });
 
       it('should ignore non-string telemetry values', () => {
         const wrapper = new TestProviderWrapper({});
-        const result = wrapper['extractTelemetryContext']({
+        const result = wrapper.extractTelemetryContext({
           telemetry: { tenant: 123 },
         });
         expect(result).toBeUndefined();
@@ -125,7 +125,7 @@ describe('Providers', () => {
             usage: { prompt_tokens: 50, completion_tokens: 25 },
           }),
         },
-      } as any;
+      } as unknown;
 
       const wrapper = new OpenAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -135,7 +135,7 @@ describe('Providers', () => {
         model: 'gpt-4',
         messages: [{ role: 'user', content: 'Hello!' }],
         telemetry: { tenant: 'acme', feature: 'chat' },
-      } as any);
+      } as unknown);
 
       expect(capturedSpans).toHaveLength(1);
       expect(capturedSpans[0].provider).toBe('openai');
@@ -157,7 +157,7 @@ describe('Providers', () => {
         completions: {
           create: vi.fn(),
         },
-      } as any;
+      } as unknown;
 
       const wrapper = new OpenAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -167,7 +167,7 @@ describe('Providers', () => {
         wrapped.chat.completions.create({
           model: 'gpt-4',
           messages: [{ role: 'user', content: 'Hello!' }],
-        } as any),
+        } as unknown),
       ).rejects.toThrow('API error');
 
       expect(capturedSpans).toHaveLength(1);
@@ -189,7 +189,7 @@ describe('Providers', () => {
             usage: { prompt_tokens: 50, completion_tokens: 25 },
           }),
         },
-      } as any;
+      } as unknown;
 
       const wrapper = new OpenAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -199,7 +199,7 @@ describe('Providers', () => {
         model: 'gpt-3.5-turbo-instruct',
         prompt: 'Hello!',
         telemetry: { tenant: 'test' },
-      } as any);
+      } as unknown);
 
       expect(capturedSpans).toHaveLength(1);
       expect(capturedSpans[0].model).toBe('gpt-3.5-turbo-instruct');
@@ -217,7 +217,7 @@ describe('Providers', () => {
         completions: {
           create: vi.fn().mockRejectedValue(new Error('fail')),
         },
-      } as any;
+      } as unknown;
 
       const wrapper = new OpenAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -227,7 +227,7 @@ describe('Providers', () => {
         wrapped.completions.create({
           model: 'gpt-3.5-turbo-instruct',
           prompt: 'Hello!',
-        } as any),
+        } as unknown),
       ).rejects.toThrow('fail');
 
       expect(capturedSpans).toHaveLength(1);
@@ -237,7 +237,7 @@ describe('Providers', () => {
       const mockClient = {
         chat: { completions: { create: vi.fn() } },
         completions: { create: vi.fn() },
-      } as any;
+      } as unknown;
       const wrapper = new OpenAIWrapper(mockClient);
       const wrapped = wrapper.wrap();
       expect(wrapped).toBe(mockClient);
@@ -259,7 +259,7 @@ describe('Providers', () => {
             },
           }),
         },
-      } as any;
+      } as unknown;
 
       const wrapper = new AnthropicWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -270,7 +270,7 @@ describe('Providers', () => {
         max_tokens: 1024,
         messages: [{ role: 'user', content: 'Hello!' }],
         telemetry: { tenant: 'acme' },
-      } as any);
+      } as unknown);
 
       expect(capturedSpans).toHaveLength(1);
       expect(capturedSpans[0].provider).toBe('anthropic');
@@ -287,7 +287,7 @@ describe('Providers', () => {
         messages: {
           create: vi.fn().mockRejectedValue(new Error('API error')),
         },
-      } as any;
+      } as unknown;
 
       const wrapper = new AnthropicWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -298,7 +298,7 @@ describe('Providers', () => {
           model: 'claude-opus-20240229',
           max_tokens: 1024,
           messages: [{ role: 'user', content: 'Hello!' }],
-        } as any),
+        } as unknown),
       ).rejects.toThrow('API error');
 
       expect(capturedSpans).toHaveLength(1);
@@ -317,7 +317,7 @@ describe('Providers', () => {
             },
           }),
         },
-      } as any;
+      } as unknown;
 
       const wrapper = new AnthropicWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -327,7 +327,7 @@ describe('Providers', () => {
         model: 'claude-sonnet-20240229',
         max_tokens: 1024,
         messages: [{ role: 'user', content: 'Hello!' }],
-      } as any);
+      } as unknown);
 
       expect(capturedSpans).toHaveLength(1);
       expect(capturedSpans[0].cacheReadTokens).toBeUndefined();
@@ -348,7 +348,7 @@ describe('Providers', () => {
 
       const mockClient = {
         getGenerativeModel: vi.fn().mockReturnValue(mockModel),
-      } as any;
+      } as unknown;
 
       const wrapper = new GoogleGenerativeAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -357,10 +357,10 @@ describe('Providers', () => {
       const model = wrapped.getGenerativeModel({ model: 'gemini-pro' });
 
       await model.generateContent(
-        'Hello!' as any,
+        'Hello!' as unknown,
         {
           telemetry: { tenant: 'acme', feature: 'chat' },
-        } as any,
+        } as unknown,
       );
 
       expect(capturedSpans).toHaveLength(1);
@@ -380,7 +380,7 @@ describe('Providers', () => {
 
       const mockClient = {
         getGenerativeModel: vi.fn().mockReturnValue(mockModel),
-      } as any;
+      } as unknown;
 
       const wrapper = new GoogleGenerativeAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -388,7 +388,7 @@ describe('Providers', () => {
 
       const model = wrapped.getGenerativeModel({ model: 'gemini-pro' });
 
-      await expect(model.generateContent('Hello!' as any)).rejects.toThrow('API error');
+      await expect(model.generateContent('Hello!' as unknown)).rejects.toThrow('API error');
 
       expect(capturedSpans).toHaveLength(1);
       expect(capturedSpans[0].inputTokens).toBe(0);
@@ -412,14 +412,14 @@ describe('Providers', () => {
 
       const mockClient = {
         getGenerativeModel: vi.fn().mockReturnValue(mockModel),
-      } as any;
+      } as unknown;
 
       const wrapper = new GoogleGenerativeAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
       const wrapped = wrapper.wrap();
 
       const model = wrapped.getGenerativeModel({ model: 'gemini-pro' });
-      const result = await model.generateContentStream('Hello!' as any);
+      const result = await model.generateContentStream('Hello!' as unknown);
 
       const chunks: unknown[] = [];
       for await (const chunk of result.stream) {
@@ -450,14 +450,14 @@ describe('Providers', () => {
 
       const mockClient = {
         getGenerativeModel: vi.fn().mockReturnValue(mockModel),
-      } as any;
+      } as unknown;
 
       const wrapper = new GoogleGenerativeAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
       const wrapped = wrapper.wrap();
 
       const model = wrapped.getGenerativeModel({ model: 'gemini-pro' });
-      const result = await model.generateContentStream('Hello!' as any);
+      const result = await model.generateContentStream('Hello!' as unknown);
 
       await expect(async () => {
         for await (const _ of result.stream) {
@@ -481,7 +481,7 @@ describe('Providers', () => {
 
       const mockClient = {
         getGenerativeModel: vi.fn().mockReturnValue(mockModel),
-      } as any;
+      } as unknown;
 
       const wrapper = new GoogleGenerativeAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -491,7 +491,7 @@ describe('Providers', () => {
 
       await model.generateContent({
         contents: [{ role: 'user', parts: [{ text: 'Hello!' }] }],
-      } as any);
+      } as unknown);
 
       expect(capturedSpans).toHaveLength(1);
     });
@@ -508,14 +508,14 @@ describe('Providers', () => {
 
       const mockClient = {
         getGenerativeModel: vi.fn().mockReturnValue(mockModel),
-      } as any;
+      } as unknown;
 
       const wrapper = new GoogleGenerativeAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
       const wrapped = wrapper.wrap();
 
       const model = wrapped.getGenerativeModel({ model: 'gemini-pro' });
-      await model.generateContent('Hello!' as any);
+      await model.generateContent('Hello!' as unknown);
 
       expect(capturedSpans).toHaveLength(1);
       expect(capturedSpans[0].telemetry).toEqual({});

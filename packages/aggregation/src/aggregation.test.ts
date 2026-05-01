@@ -1,10 +1,10 @@
+import type { CostSpan } from '@reaatech/llm-cost-telemetry';
+import { CostCollector } from '@reaatech/llm-cost-telemetry-aggregation';
+import { CostAggregator } from '@reaatech/llm-cost-telemetry-aggregation';
 /**
  * Unit tests for aggregation engine
  */
-import { describe, it, expect } from 'vitest';
-import { CostCollector } from '@reaatech/llm-cost-telemetry-aggregation';
-import { CostAggregator } from '@reaatech/llm-cost-telemetry-aggregation';
-import type { CostSpan } from '@reaatech/llm-cost-telemetry';
+import { describe, expect, it } from 'vitest';
 
 /**
  * Helper to create a test span with all required fields

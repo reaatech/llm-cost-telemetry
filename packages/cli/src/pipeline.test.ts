@@ -1,17 +1,13 @@
-/**
- * Integration tests — End-to-end cost tracking pipeline
- */
-import { describe, it, expect, beforeEach } from 'vitest';
+import type { CostSpan } from '@reaatech/llm-cost-telemetry';
 import { CostAggregator } from '@reaatech/llm-cost-telemetry-aggregation';
 import { CostCollector } from '@reaatech/llm-cost-telemetry-aggregation';
 import { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
 import { calculateCost } from '@reaatech/llm-cost-telemetry-calculator';
-import type { CostSpan } from '@reaatech/llm-cost-telemetry';
-import {
-  createSampleSpan,
-  createMultiProviderSpans,
-  TEST_BUDGET_CONFIG,
-} from './fixtures.js';
+/**
+ * Integration tests — End-to-end cost tracking pipeline
+ */
+import { beforeEach, describe, expect, it } from 'vitest';
+import { TEST_BUDGET_CONFIG, createMultiProviderSpans, createSampleSpan } from './fixtures.js';
 
 describe('Integration: End-to-end cost tracking pipeline', () => {
   let aggregator: CostAggregator;

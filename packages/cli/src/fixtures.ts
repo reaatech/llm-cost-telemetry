@@ -1,7 +1,7 @@
 /**
  * Test fixtures — sample cost spans for integration tests
  */
-import type { CostSpan, CostRecord, BudgetConfig } from '@reaatech/llm-cost-telemetry';
+import type { BudgetConfig, CostRecord, CostSpan } from '@reaatech/llm-cost-telemetry';
 
 export function createSampleSpan(overrides: Partial<CostSpan> = {}): CostSpan {
   return {

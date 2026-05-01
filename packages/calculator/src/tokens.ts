@@ -48,9 +48,8 @@ const TOKENS_PER_CHAR: Record<string, number> = {
  */
 export async function countOpenAITokens(model: string, text: string): Promise<TokenCountResult> {
   try {
-    // Try to use tiktoken if available
     const tiktoken = await import('tiktoken');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: tiktoken model type is a string union
     const encoding = tiktoken.encoding_for_model(model as any);
     const tokens = encoding.encode(text).length;
     encoding.free();
@@ -65,7 +64,10 @@ export async function countOpenAITokens(model: string, text: string): Promise<To
  * Count tokens for Anthropic models
  * Falls back to estimation if tokenizer is not available
  */
-export async function countAnthropicTokens(_model: string, text: string): Promise<TokenCountResult> {
+export async function countAnthropicTokens(
+  _model: string,
+  text: string,
+): Promise<TokenCountResult> {
   // Anthropic doesn't have a public tokenizer package
   // Use estimation for now
   return estimateTokens('anthropic', text);

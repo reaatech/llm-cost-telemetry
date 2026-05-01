@@ -1,7 +1,7 @@
 /**
  * Shared utilities
  */
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 /**
  * Generate a unique ID (UUID v4)
@@ -126,7 +126,7 @@ export function percentage(part: number, total: number): number {
  * Round to a given number of decimal places
  */
 export function roundTo(value: number, decimals: number): number {
-  const factor = Math.pow(10, decimals);
+  const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
 }
 
@@ -253,8 +253,8 @@ export function getEnvVar(name: string, defaultValue?: string): string | undefin
 export function getEnvInt(name: string, defaultValue: number): number {
   const value = process.env[name];
   if (value === undefined) return defaultValue;
-  const parsed = parseInt(value, 10);
-  return isNaN(parsed) ? defaultValue : parsed;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? defaultValue : parsed;
 }
 
 /**
@@ -263,8 +263,8 @@ export function getEnvInt(name: string, defaultValue: number): number {
 export function getEnvFloat(name: string, defaultValue: number): number {
   const value = process.env[name];
   if (value === undefined) return defaultValue;
-  const parsed = parseFloat(value);
-  return isNaN(parsed) ? defaultValue : parsed;
+  const parsed = Number.parseFloat(value);
+  return Number.isNaN(parsed) ? defaultValue : parsed;
 }
 
 /**

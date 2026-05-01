@@ -1,4 +1,4 @@
-import { readFile } from 'fs/promises';
+import { readFile } from 'node:fs/promises';
 import type { CostSpan } from '@reaatech/llm-cost-telemetry';
 
 export async function loadSpansInput(inputPath?: string): Promise<CostSpan[]> {

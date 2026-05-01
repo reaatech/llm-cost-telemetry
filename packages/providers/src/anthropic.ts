@@ -3,8 +3,8 @@
  */
 import type Anthropic from '@anthropic-ai/sdk';
 import type { MessageCreateParamsNonStreaming } from '@anthropic-ai/sdk/resources/messages';
-import { BaseProviderWrapper, type RequestMetadata, type ResponseMetadata } from './base.js';
 import { now } from '@reaatech/llm-cost-telemetry';
+import { BaseProviderWrapper, type RequestMetadata, type ResponseMetadata } from './base.js';
 
 /**
  * Wrapped Anthropic client type
@@ -30,19 +30,14 @@ export class AnthropicWrapper extends BaseProviderWrapper<Anthropic> {
    * Wrap the Anthropic client to intercept messages.create
    */
   wrap(): WrappedAnthropic {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const wrapper = this;
     const originalClient = this.client;
 
     // Wrap messages.create
     const originalCreate = originalClient.messages.create.bind(originalClient.messages);
 
-    originalClient.messages.create = async function (
-      options: MessageCreateParamsNonStreaming,
-      ...rest
-    ) {
+    originalClient.messages.create = (async (options: MessageCreateParamsNonStreaming, ...rest) => {
       const startTime = now();
-      const telemetry = wrapper.extractTelemetryContext(
+      const telemetry = this.extractTelemetryContext(
         options as unknown as { [key: string]: unknown },
       );
       const model = options.model;
@@ -90,8 +85,8 @@ export class AnthropicWrapper extends BaseProviderWrapper<Anthropic> {
           endTime,
         };
 
-        const span = wrapper.createSpan(requestMetadata, responseMetadata);
-        wrapper.emitSpan(span);
+        const span = this.createSpan(requestMetadata, responseMetadata);
+        this.emitSpan(span);
 
         return response;
       } catch (error) {
@@ -111,12 +106,12 @@ export class AnthropicWrapper extends BaseProviderWrapper<Anthropic> {
           error: error as Error,
         };
 
-        const span = wrapper.createSpan(requestMetadata, responseMetadata);
-        wrapper.emitSpan(span);
+        const span = this.createSpan(requestMetadata, responseMetadata);
+        this.emitSpan(span);
 
         throw error;
       }
-    } as typeof originalClient.messages.create;
+    }) as typeof originalClient.messages.create;
 
     return originalClient as WrappedAnthropic;
   }

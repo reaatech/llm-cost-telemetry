@@ -1,8 +1,8 @@
+import type { CostSpan } from '@reaatech/llm-cost-telemetry';
 /**
  * Structured logging with PII redaction
  */
 import pino from 'pino';
-import type { CostSpan } from '@reaatech/llm-cost-telemetry';
 
 const PII_PATTERNS: RegExp[] = [
   /sk-[a-zA-Z0-9]{20,}/g,

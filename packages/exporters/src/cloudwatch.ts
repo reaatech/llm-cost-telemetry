@@ -4,9 +4,9 @@
  */
 import type { PutMetricDataCommandInput } from '@aws-sdk/client-cloudwatch';
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
-import { BaseExporter, type ExportResult } from './base.js';
-import type { CostSpan, CostRecord, RetryConfig } from '@reaatech/llm-cost-telemetry';
+import type { CostRecord, CostSpan, RetryConfig } from '@reaatech/llm-cost-telemetry';
 import { getLogger } from '@reaatech/llm-cost-telemetry-observability';
+import { BaseExporter, type ExportResult } from './base.js';
 
 /**
  * CloudWatch exporter options

@@ -1,14 +1,14 @@
+import type { Span, Tracer } from '@opentelemetry/api';
+import { SpanKind, context, propagation, trace } from '@opentelemetry/api';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 /**
  * OpenTelemetry tracing integration
  */
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
-import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { resourceFromAttributes } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
-import type { Tracer, Span } from '@opentelemetry/api';
-import { trace, SpanKind, context, propagation } from '@opentelemetry/api';
-import type { TelemetryConfig, CostSpan } from '@reaatech/llm-cost-telemetry';
+import type { CostSpan, TelemetryConfig } from '@reaatech/llm-cost-telemetry';
 
 /**
  * Tracing options
