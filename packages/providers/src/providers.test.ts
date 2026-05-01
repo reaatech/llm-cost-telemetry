@@ -24,14 +24,14 @@ describe('Providers', () => {
       const callback = vi.fn();
       wrapper.onSpan(callback);
 
-      const span = { id: 'test' } as unknown as CostSpan;
+      const span = { id: 'test' } as any as CostSpan;
       wrapper.emitSpan(span);
       expect(callback).toHaveBeenCalledWith(span);
     });
 
     it('should not throw when emitting without callback', () => {
       const wrapper = new TestProviderWrapper({});
-      expect(() => wrapper.emitSpan({ id: 'test' } as unknown as CostSpan)).not.toThrow();
+      expect(() => wrapper.emitSpan({ id: 'test' } as any as CostSpan)).not.toThrow();
     });
 
     it('should set default context', () => {
@@ -125,7 +125,7 @@ describe('Providers', () => {
             usage: { prompt_tokens: 50, completion_tokens: 25 },
           }),
         },
-      } as unknown;
+      } as any;
 
       const wrapper = new OpenAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -135,7 +135,7 @@ describe('Providers', () => {
         model: 'gpt-4',
         messages: [{ role: 'user', content: 'Hello!' }],
         telemetry: { tenant: 'acme', feature: 'chat' },
-      } as unknown);
+      } as any);
 
       expect(capturedSpans).toHaveLength(1);
       expect(capturedSpans[0].provider).toBe('openai');
@@ -157,7 +157,7 @@ describe('Providers', () => {
         completions: {
           create: vi.fn(),
         },
-      } as unknown;
+      } as any;
 
       const wrapper = new OpenAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -167,7 +167,7 @@ describe('Providers', () => {
         wrapped.chat.completions.create({
           model: 'gpt-4',
           messages: [{ role: 'user', content: 'Hello!' }],
-        } as unknown),
+        } as any),
       ).rejects.toThrow('API error');
 
       expect(capturedSpans).toHaveLength(1);
@@ -189,7 +189,7 @@ describe('Providers', () => {
             usage: { prompt_tokens: 50, completion_tokens: 25 },
           }),
         },
-      } as unknown;
+      } as any;
 
       const wrapper = new OpenAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -199,7 +199,7 @@ describe('Providers', () => {
         model: 'gpt-3.5-turbo-instruct',
         prompt: 'Hello!',
         telemetry: { tenant: 'test' },
-      } as unknown);
+      } as any);
 
       expect(capturedSpans).toHaveLength(1);
       expect(capturedSpans[0].model).toBe('gpt-3.5-turbo-instruct');
@@ -217,7 +217,7 @@ describe('Providers', () => {
         completions: {
           create: vi.fn().mockRejectedValue(new Error('fail')),
         },
-      } as unknown;
+      } as any;
 
       const wrapper = new OpenAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -227,7 +227,7 @@ describe('Providers', () => {
         wrapped.completions.create({
           model: 'gpt-3.5-turbo-instruct',
           prompt: 'Hello!',
-        } as unknown),
+        } as any),
       ).rejects.toThrow('fail');
 
       expect(capturedSpans).toHaveLength(1);
@@ -237,7 +237,7 @@ describe('Providers', () => {
       const mockClient = {
         chat: { completions: { create: vi.fn() } },
         completions: { create: vi.fn() },
-      } as unknown;
+      } as any;
       const wrapper = new OpenAIWrapper(mockClient);
       const wrapped = wrapper.wrap();
       expect(wrapped).toBe(mockClient);
@@ -259,7 +259,7 @@ describe('Providers', () => {
             },
           }),
         },
-      } as unknown;
+      } as any;
 
       const wrapper = new AnthropicWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -270,7 +270,7 @@ describe('Providers', () => {
         max_tokens: 1024,
         messages: [{ role: 'user', content: 'Hello!' }],
         telemetry: { tenant: 'acme' },
-      } as unknown);
+      } as any);
 
       expect(capturedSpans).toHaveLength(1);
       expect(capturedSpans[0].provider).toBe('anthropic');
@@ -287,7 +287,7 @@ describe('Providers', () => {
         messages: {
           create: vi.fn().mockRejectedValue(new Error('API error')),
         },
-      } as unknown;
+      } as any;
 
       const wrapper = new AnthropicWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -298,7 +298,7 @@ describe('Providers', () => {
           model: 'claude-opus-20240229',
           max_tokens: 1024,
           messages: [{ role: 'user', content: 'Hello!' }],
-        } as unknown),
+        } as any),
       ).rejects.toThrow('API error');
 
       expect(capturedSpans).toHaveLength(1);
@@ -317,7 +317,7 @@ describe('Providers', () => {
             },
           }),
         },
-      } as unknown;
+      } as any;
 
       const wrapper = new AnthropicWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -327,7 +327,7 @@ describe('Providers', () => {
         model: 'claude-sonnet-20240229',
         max_tokens: 1024,
         messages: [{ role: 'user', content: 'Hello!' }],
-      } as unknown);
+      } as any);
 
       expect(capturedSpans).toHaveLength(1);
       expect(capturedSpans[0].cacheReadTokens).toBeUndefined();
@@ -348,7 +348,7 @@ describe('Providers', () => {
 
       const mockClient = {
         getGenerativeModel: vi.fn().mockReturnValue(mockModel),
-      } as unknown;
+      } as any;
 
       const wrapper = new GoogleGenerativeAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -357,10 +357,10 @@ describe('Providers', () => {
       const model = wrapped.getGenerativeModel({ model: 'gemini-pro' });
 
       await model.generateContent(
-        'Hello!' as unknown,
+        'Hello!' as any,
         {
           telemetry: { tenant: 'acme', feature: 'chat' },
-        } as unknown,
+        } as any,
       );
 
       expect(capturedSpans).toHaveLength(1);
@@ -380,7 +380,7 @@ describe('Providers', () => {
 
       const mockClient = {
         getGenerativeModel: vi.fn().mockReturnValue(mockModel),
-      } as unknown;
+      } as any;
 
       const wrapper = new GoogleGenerativeAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -388,7 +388,7 @@ describe('Providers', () => {
 
       const model = wrapped.getGenerativeModel({ model: 'gemini-pro' });
 
-      await expect(model.generateContent('Hello!' as unknown)).rejects.toThrow('API error');
+      await expect(model.generateContent('Hello!' as any)).rejects.toThrow('API error');
 
       expect(capturedSpans).toHaveLength(1);
       expect(capturedSpans[0].inputTokens).toBe(0);
@@ -412,14 +412,14 @@ describe('Providers', () => {
 
       const mockClient = {
         getGenerativeModel: vi.fn().mockReturnValue(mockModel),
-      } as unknown;
+      } as any;
 
       const wrapper = new GoogleGenerativeAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
       const wrapped = wrapper.wrap();
 
       const model = wrapped.getGenerativeModel({ model: 'gemini-pro' });
-      const result = await model.generateContentStream('Hello!' as unknown);
+      const result = await model.generateContentStream('Hello!' as any);
 
       const chunks: unknown[] = [];
       for await (const chunk of result.stream) {
@@ -450,14 +450,14 @@ describe('Providers', () => {
 
       const mockClient = {
         getGenerativeModel: vi.fn().mockReturnValue(mockModel),
-      } as unknown;
+      } as any;
 
       const wrapper = new GoogleGenerativeAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
       const wrapped = wrapper.wrap();
 
       const model = wrapped.getGenerativeModel({ model: 'gemini-pro' });
-      const result = await model.generateContentStream('Hello!' as unknown);
+      const result = await model.generateContentStream('Hello!' as any);
 
       await expect(async () => {
         for await (const _ of result.stream) {
@@ -481,7 +481,7 @@ describe('Providers', () => {
 
       const mockClient = {
         getGenerativeModel: vi.fn().mockReturnValue(mockModel),
-      } as unknown;
+      } as any;
 
       const wrapper = new GoogleGenerativeAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
@@ -491,7 +491,7 @@ describe('Providers', () => {
 
       await model.generateContent({
         contents: [{ role: 'user', parts: [{ text: 'Hello!' }] }],
-      } as unknown);
+      } as any);
 
       expect(capturedSpans).toHaveLength(1);
     });
@@ -508,14 +508,14 @@ describe('Providers', () => {
 
       const mockClient = {
         getGenerativeModel: vi.fn().mockReturnValue(mockModel),
-      } as unknown;
+      } as any;
 
       const wrapper = new GoogleGenerativeAIWrapper(mockClient);
       wrapper.onSpan((span) => capturedSpans.push(span));
       const wrapped = wrapper.wrap();
 
       const model = wrapped.getGenerativeModel({ model: 'gemini-pro' });
-      await model.generateContent('Hello!' as unknown);
+      await model.generateContent('Hello!' as any);
 
       expect(capturedSpans).toHaveLength(1);
       expect(capturedSpans[0].telemetry).toEqual({});

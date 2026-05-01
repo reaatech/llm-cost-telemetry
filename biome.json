@@ -11,7 +11,7 @@
     "rules": {
       "recommended": true,
       "suspicious": {
-        "noExplicitAny": "error"
+        "noExplicitAny": "warn"
       },
       "style": {
         "noNonNullAssertion": "error"

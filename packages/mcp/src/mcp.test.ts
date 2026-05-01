@@ -16,7 +16,7 @@ async function callTool(
   name: string,
   args: Record<string, unknown>,
 ) {
-  return (server as unknown)._requestHandlers?.get?.('tools/call')?.({
+  return (server as any)._requestHandlers?.get?.('tools/call')?.({
     method: 'tools/call',
     params: { name, arguments: args },
   });
@@ -63,7 +63,7 @@ describe('MCP Server', () => {
   describe('ListTools handler', () => {
     it('should return all tool schemas', async () => {
       const server = createCostTelemetryServer({ budgetConfig: mockBudgetConfig });
-      const handler = (server as unknown)._requestHandlers?.get?.('tools/list');
+      const handler = (server as any)._requestHandlers?.get?.('tools/list');
       if (handler) {
         const result = await handler({ method: 'tools/list', params: {} });
         expect(result.tools).toBeDefined();

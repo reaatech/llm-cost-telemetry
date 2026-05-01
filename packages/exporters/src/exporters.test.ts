@@ -151,7 +151,7 @@ describe('Exporters', () => {
     it('should export spans to CloudWatch', async () => {
       const exporter = new CloudWatchExporter({ region: 'us-east-1' });
 
-      const sendSpy = vi.spyOn(exporter.client, 'send').mockResolvedValue({} as unknown);
+      const sendSpy = vi.spyOn(exporter.client, 'send').mockResolvedValue({} as any);
 
       const spans = [createTestSpan({ telemetry: { tenant: 'acme', feature: 'chat' } })];
 
@@ -178,7 +178,7 @@ describe('Exporters', () => {
 
     it('should export records to CloudWatch', async () => {
       const exporter = new CloudWatchExporter({ region: 'us-east-1' });
-      const sendSpy = vi.spyOn(exporter.client, 'send').mockResolvedValue({} as unknown);
+      const sendSpy = vi.spyOn(exporter.client, 'send').mockResolvedValue({} as any);
 
       const records = [createTestRecord()];
       const result = await exporter.exportRecords(records);
@@ -219,7 +219,7 @@ describe('Exporters', () => {
       const exporter = new CloudMonitoringExporter({ projectId: 'test-project' });
       const createTimeSeriesSpy = vi
         .spyOn(exporter.client, 'createTimeSeries')
-        .mockResolvedValue({} as unknown);
+        .mockResolvedValue({} as any);
 
       const spans = [createTestSpan({ telemetry: { tenant: 'acme' } })];
 
@@ -244,7 +244,7 @@ describe('Exporters', () => {
 
     it('should export records to Cloud Monitoring', async () => {
       const exporter = new CloudMonitoringExporter({ projectId: 'test-project' });
-      vi.spyOn(exporter.client, 'createTimeSeries').mockResolvedValue({} as unknown);
+      vi.spyOn(exporter.client, 'createTimeSeries').mockResolvedValue({} as any);
 
       const records = [createTestRecord()];
       const result = await exporter.exportRecords(records);
