@@ -1,236 +1,199 @@
 # llm-cost-telemetry
 
-Enterprise-grade LLM cost telemetry library with provider SDK wrapping, multi-tenant aggregation, and CloudWatch/Cloud Monitoring/Phoenix export.
+[![CI](https://github.com/reaatech/llm-cost-telemetry/actions/workflows/ci.yml/badge.svg)](https://github.com/reaatech/llm-cost-telemetry/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)](https://www.typescriptlang.org/)
 
-## What This Is
+> Production-ready LLM cost telemetry for tracking, aggregating, and exporting costs across OpenAI, Anthropic, and Google models — with multi-tenant aggregation, budget enforcement, and MCP integration.
 
-`llm-cost-telemetry` tracks, aggregates, and exports LLM costs in production applications. It wraps provider SDKs (OpenAI, Anthropic, Google) to automatically capture cost data, aggregates costs by tenant/feature/route, and exports to existing observability stacks.
+This monorepo provides provider SDK wrappers, a cost calculation engine, aggregation and budget management, OpenTelemetry observability, cloud exporters, an MCP server, and a CLI — all designed for production LLM cost operations.
 
-**Target audience:** Engineering teams running LLM-powered applications in production who need accurate cost tracking, multi-tenant cost allocation, budget enforcement, and integration with existing observability stacks.
+## Features
 
-## Quick Start
+- **Provider SDK wrapping** — Drop-in wrappers for OpenAI, Anthropic, and Google Generative AI with automatic cost span emission
+- **Cost calculation** — Provider-agnostic cost engine with cache-aware pricing and token counting via tiktoken
+- **Multi-tenant aggregation** — Track costs by tenant, feature, route, provider, and model across time windows
+- **Budget enforcement** — Per-tenant daily/monthly budget tracking with cascading alert thresholds (log, notify, block)
+- **Observability** — OpenTelemetry tracing and metrics with Gen AI semantic conventions, plus structured Pino logging
+- **Cloud exporters** — Push cost data to AWS CloudWatch, GCP Cloud Monitoring, and Grafana Loki/Phoenix
+- **MCP server** — Three-layer MCP tool architecture (atomic span ops, aggregation queries, budget checks)
+- **CLI** — Generate cost reports, check budgets, and trigger exports from the command line
 
-### Installation
+## Installation
+
+### Using the packages
+
+Packages are published under the `@reaatech` scope and can be installed individually:
 
 ```bash
-npm install llm-cost-telemetry
+# Core types, schemas, utilities, and configuration
+pnpm add @reaatech/llm-cost-telemetry
+
+# Cost calculation engine (pricing, token counting)
+pnpm add @reaatech/llm-cost-telemetry-calculator
+
+# Provider SDK wrappers (OpenAI, Anthropic, Google)
+pnpm add @reaatech/llm-cost-telemetry-providers
+
+# Cost collection, aggregation, and budget enforcement
+pnpm add @reaatech/llm-cost-telemetry-aggregation
+
+# OpenTelemetry tracing, metrics, and structured logging
+pnpm add @reaatech/llm-cost-telemetry-observability
+
+# Exporters (CloudWatch, Cloud Monitoring, Loki/Phoenix)
+pnpm add @reaatech/llm-cost-telemetry-exporters
+
+# MCP server for agent integration
+pnpm add @reaatech/llm-cost-telemetry-mcp
+
+# CLI tool for reports, budget checks, and exports
+pnpm add @reaatech/llm-cost-telemetry-cli
 ```
+
+### Contributing
+
+```bash
+# Clone the repository
+git clone https://github.com/reaatech/llm-cost-telemetry.git
+cd llm-cost-telemetry
+
+# Install dependencies
+pnpm install
+
+# Build all packages
+pnpm build
+
+# Run the test suite
+pnpm test
+
+# Run linting
+pnpm lint
+```
+
+## Quick Start
 
 ### Wrap Your Provider SDK
 
 ```typescript
-import { wrapOpenAI } from 'llm-cost-telemetry';
-import OpenAI from 'openai';
+import { wrapOpenAI } from "@reaatech/llm-cost-telemetry-providers";
+import OpenAI from "openai";
 
 const client = wrapOpenAI(new OpenAI({ apiKey: process.env.OPENAI_API_KEY }));
 
-// All calls are automatically tracked
 const response = await client.chat.completions.create({
-  model: 'gpt-4',
-  messages: [{ role: 'user', content: 'Hello!' }],
+  model: "gpt-4",
+  messages: [{ role: "user", content: "Hello!" }],
   telemetry: {
-    tenant: 'acme-corp',
-    feature: 'chat-support',
-    route: '/api/chat'
-  }
+    tenant: "acme-corp",
+    feature: "chat-support",
+    route: "/api/chat",
+  },
 });
 ```
 
-### Calculate Costs
+### Calculate and Aggregate Costs
 
 ```typescript
-import { calculateCost } from 'llm-cost-telemetry';
+import { calculateCost } from "@reaatech/llm-cost-telemetry-calculator";
+import { CostCollector, CostAggregator } from "@reaatech/llm-cost-telemetry-aggregation";
 
 const { costUsd, breakdown } = calculateCost({
-  provider: 'openai',
-  model: 'gpt-4',
+  provider: "openai",
+  model: "gpt-4",
   inputTokens: 150,
-  outputTokens: 45
+  outputTokens: 45,
 });
 
-console.log(`Cost: $${costUsd}`); // Cost: $0.0072
+const collector = new CostCollector();
+const aggregator = new CostAggregator({ dimensions: ["tenant"] });
+
+collector.onFlush = (spans) => spans.forEach((s) => aggregator.add(s));
 ```
 
-## Features
+### Check Budget Before API Calls
 
-- **Provider Wrapping** — Drop-in wrappers for OpenAI, Anthropic, and Google SDKs
-- **Accurate Cost Calculation** — Within 1% of provider billing
-- **Multi-Tenant Aggregation** — Track costs by tenant, feature, route
-- **Budget Enforcement** — Set budgets and get alerts
-- **Multiple Exporters** — CloudWatch, Cloud Monitoring, Phoenix/Loki
-- **OpenTelemetry Integration** — Tracing and metrics
-- **Structured Logging** — JSON logs with PII redaction
-- **CLI Tool** — Generate reports, check budgets, trigger exports
+```typescript
+import { BudgetManager } from "@reaatech/llm-cost-telemetry-aggregation";
+
+const budget = new BudgetManager({
+  tenants: { "acme-corp": { daily: 100, monthly: 2000 } },
+});
+
+const status = await budget.check({ tenant: "acme-corp", estimatedCost: 5.00 });
+
+if (!status.withinBudget) {
+  throw new Error(`Budget exhausted: ${status.dailyPercentage}% used`);
+}
+```
+
+### Export to CloudWatch
+
+```typescript
+import { CloudWatchExporter } from "@reaatech/llm-cost-telemetry-exporters";
+
+const exporter = new CloudWatchExporter({
+  region: "us-east-1",
+  namespace: "LLM/Costs",
+  emfEnabled: true,
+});
+
+await exporter.exportSpans(spans);
+```
+
+## Packages
+
+| Package | Description |
+|---------|-------------|
+| [`@reaatech/llm-cost-telemetry`](./packages/core) | Core types, Zod schemas, utilities, and configuration |
+| [`@reaatech/llm-cost-telemetry-calculator`](./packages/calculator) | Cost calculation engine with pricing, token counting, and estimation |
+| [`@reaatech/llm-cost-telemetry-providers`](./packages/providers) | Provider SDK wrappers for OpenAI, Anthropic, and Google |
+| [`@reaatech/llm-cost-telemetry-aggregation`](./packages/aggregation) | Span collection, multi-dimensional aggregation, and budget enforcement |
+| [`@reaatech/llm-cost-telemetry-observability`](./packages/observability) | OpenTelemetry tracing, metrics, and Pino-based structured logging |
+| [`@reaatech/llm-cost-telemetry-exporters`](./packages/exporters) | CloudWatch, Cloud Monitoring, and Loki/Phoenix exporters |
+| [`@reaatech/llm-cost-telemetry-mcp`](./packages/mcp) | MCP server with three-layer cost telemetry tools |
+| [`@reaatech/llm-cost-telemetry-cli`](./packages/cli) | CLI for cost reports, budget checks, and export triggering |
 
 ## Provider Support
 
-| Provider | Models Supported | Cache Support |
-|----------|-----------------|---------------|
+| Provider | Models | Cache Support |
+|----------|--------|---------------|
 | OpenAI | GPT-4, GPT-4 Turbo, GPT-4o, GPT-3.5 Turbo | No |
 | Anthropic | Claude Opus, Sonnet, Haiku | Yes (prompt caching) |
 | Google | Gemini Pro, Gemini 1.5 | No |
-
-## Configuration
-
-### Environment Variables
-
-```bash
-# LLM Provider API Keys
-OPENAI_API_KEY=your_openai_api_key_here
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
-GOOGLE_API_KEY=your_google_api_key_here
-
-# AWS Configuration (for CloudWatch export)
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your_aws_access_key_here
-AWS_SECRET_ACCESS_KEY=your_aws_secret_key_here
-
-# GCP Configuration (for Cloud Monitoring export)
-GCP_PROJECT_ID=your_gcp_project_id_here
-
-# Loki Configuration (for Phoenix export)
-LOKI_HOST=http://localhost:3100
-
-# OpenTelemetry Configuration
-OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
-OTEL_SERVICE_NAME=llm-cost-telemetry
-
-# Budget Configuration
-DEFAULT_DAILY_BUDGET=100.00
-DEFAULT_MONTHLY_BUDGET=2000.00
-```
 
 ## CLI Reference
 
 ```bash
 # Generate cost report
-npx llm-cost-telemetry report --input ./spans.json --tenant acme-corp --period day --format json
+npx llm-cost-telemetry report --tenant acme-corp --period day --format table
 
 # Check budget status
-npx llm-cost-telemetry check --tenant acme-corp --threshold 0.8
+npx llm-cost-telemetry check --tenant acme-corp
 
-# Manual export trigger
-npx llm-cost-telemetry export --input ./spans.json --exporter cloudwatch --period hour
+# Export to CloudWatch
+npx llm-cost-telemetry export --exporter cloudwatch --period hour
 
-# Preview export payload without sending it
-npx llm-cost-telemetry export --input ./spans.json --exporter cloudwatch --dry-run
-
-# Show configuration
-npx llm-cost-telemetry config --format json
+# Dry-run export (preview without sending)
+npx llm-cost-telemetry export --exporter cloudwatch --dry-run
 ```
-
-`report` and `export` consume a JSON array of cost spans from `--input` or from piped stdin. This keeps the CLI stateless while allowing reports and exports to run against captured telemetry data.
 
 ## Three-Layer MCP Tools
 
-The library exposes MCP tools for agent integration:
+The MCP server exposes 10 tools across three layers:
 
-### Layer 1: cost.span.* (Atomic Operations)
-- `cost.span.record` — Record a cost span
-- `cost.span.get` — Retrieve span by ID
-- `cost.span.flush` — Flush buffered spans
+**Layer 1 — `cost.span.*`:** `record`, `get`, `flush`
 
-### Layer 2: cost.aggregate.* (Aggregation)
-- `cost.aggregate.by_tenant` — Get costs by tenant
-- `cost.aggregate.by_feature` — Get costs by feature
-- `cost.aggregate.by_route` — Get costs by route
-- `cost.aggregate.summary` — Get cost summary
+**Layer 2 — `cost.aggregate.*`:** `by_tenant`, `by_feature`, `by_route`, `summary`
 
-### Layer 3: cost.budget.* (Budget Management)
-- `cost.budget.check` — Check budget status
-- `cost.budget.set` — Set budget limits
-- `cost.budget.alert` — Configure alerts
-
-## Exporters
-
-### CloudWatch (AWS)
-
-```typescript
-import { CloudWatchExporter } from 'llm-cost-telemetry';
-
-const exporter = new CloudWatchExporter({
-  region: 'us-east-1',
-  namespace: 'LLM/Costs',
-  emfEnabled: true,
-  logGroupName: '/aws/llm/costs'
-});
-```
-
-### Cloud Monitoring (GCP)
-
-```typescript
-import { CloudMonitoringExporter } from 'llm-cost-telemetry';
-
-const exporter = new CloudMonitoringExporter({
-  projectId: 'my-gcp-project',
-  metricTypePrefix: 'custom.googleapis.com/llm',
-  resourceType: 'gce_instance'
-});
-```
-
-### Phoenix/Loki (Grafana)
-
-```typescript
-import { PhoenixExporter } from 'llm-cost-telemetry';
-
-const exporter = new PhoenixExporter({
-  host: 'http://loki:3100',
-  defaultLabels: {
-    service: 'llm-cost-telemetry',
-    environment: 'production'
-  }
-});
-```
-
-## Development
-
-### Prerequisites
-
-- Node.js 22+
-- npm or pnpm
-
-### Setup
-
-```bash
-# Install dependencies
-npm install
-
-# Build
-npm run build
-
-# Run tests
-npm test
-
-# Run with coverage
-npm run test:coverage
-
-# Lint
-npm run lint
-
-# Format
-npm run format
-```
-
-### Docker Development
-
-```bash
-# Start all services
-docker-compose up -d
-
-# Access Jaeger UI
-open http://localhost:16686
-
-# Access Grafana
-open http://localhost:3001
-```
+**Layer 3 — `cost.budget.*`:** `check`, `set`, `alert`
 
 ## Documentation
 
-- [AGENTS.md](./AGENTS.md) — Agent development guide
-- [ARCHITECTURE.md](./ARCHITECTURE.md) — System design deep dive
-- [DEV_PLAN.md](./DEV_PLAN.md) — Development checklist
-- [Skills](./skills/) — Individual skill documentation
+- [`AGENTS.md`](./AGENTS.md) — Agent development guide
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md) — System design and data flows
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — Contribution workflow and release process
 
 ## License
 
-MIT
+[MIT](LICENSE)

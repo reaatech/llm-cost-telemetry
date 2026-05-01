@@ -16,7 +16,7 @@ CloudWatch export sends LLM cost metrics to AWS CloudWatch for visualization, al
 ### Configure CloudWatch Exporter
 
 ```typescript
-import { CloudWatchExporter } from 'llm-cost-telemetry';
+import { CloudWatchExporter } from '@reaatech/llm-cost-telemetry-exporters';
 
 const exporter = new CloudWatchExporter({
   region: 'us-east-1',
@@ -33,7 +33,8 @@ const exporter = new CloudWatchExporter({
 ### Export Cost Metrics
 
 ```typescript
-import { CostAggregator, CloudWatchExporter } from 'llm-cost-telemetry';
+import { CostAggregator } from '@reaatech/llm-cost-telemetry-aggregation'
+import { CloudWatchExporter } from '@reaatech/llm-cost-telemetry-exporters';
 
 const aggregator = new CostAggregator();
 const exporter = new CloudWatchExporter({ region: 'us-east-1' });

@@ -16,7 +16,7 @@ Budget alerts monitor LLM spending against configured budgets and trigger notifi
 ### Configure Budget Manager
 
 ```typescript
-import { BudgetManager } from 'llm-cost-telemetry';
+import { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const budgetManager = new BudgetManager({
   // Global budgets
@@ -47,7 +47,7 @@ const budgetManager = new BudgetManager({
 ### Check Budget Before API Call
 
 ```typescript
-import { BudgetManager } from 'llm-cost-telemetry';
+import { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const budgetManager = new BudgetManager({
   tenants: {
@@ -75,7 +75,7 @@ if (!status.withinBudget) {
 Budget alerts trigger actions (`log`, `notify`, `block`) when thresholds are crossed. The `notify` action can be handled via the `onSpanFlush` callback or by monitoring the budget status:
 
 ```typescript
-import { BudgetManager } from 'llm-cost-telemetry';
+import { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const budgetManager = new BudgetManager({
   tenants: {
@@ -105,7 +105,7 @@ if (status.alerts?.includes('notify')) {
 ### Get Budget Status
 
 ```typescript
-import { BudgetManager } from 'llm-cost-telemetry';
+import { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const budgetManager = new BudgetManager({
   tenants: {
@@ -123,7 +123,7 @@ console.log(`Monthly: $${status.monthlySpent} / $${status.monthlyBudget} (${stat
 ### Configure Alert Actions
 
 ```typescript
-import { BudgetManager } from 'llm-cost-telemetry';
+import { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
 
 const budgetManager = new BudgetManager({
   tenants: {
