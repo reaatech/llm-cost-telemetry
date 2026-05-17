@@ -40,6 +40,14 @@
     "url": "https://github.com/reaatech/llm-cost-telemetry/issues"
   },
   "homepage": "https://github.com/reaatech/llm-cost-telemetry#readme",
+  "pnpm": {
+    "overrides": {
+      "fast-uri": ">=3.1.2",
+      "fast-xml-builder": ">=1.1.7",
+      "hono": ">=4.12.18",
+      "ip-address": ">=10.1.1"
+    }
+  },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@changesets/changelog-github": "^0.6.0",
