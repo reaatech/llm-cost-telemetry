@@ -1,5 +1,3 @@
-export { CostCollector, type CollectorOptions } from './collector.js';
-
-export { CostAggregator, type AggregatorOptions, type AggregationDimension } from './aggregator.js';
-
+export { type AggregationDimension, type AggregatorOptions, CostAggregator } from './aggregator.js';
 export { BudgetManager } from './budget.js';
+export { type CollectorOptions, CostCollector } from './collector.js';

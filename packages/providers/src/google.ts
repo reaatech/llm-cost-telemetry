@@ -1,8 +1,11 @@
 /**
  * Google Generative AI SDK wrapper for cost telemetry
  */
-import type { GoogleGenerativeAI } from '@google/generative-ai';
-import type { GenerateContentRequest, GenerativeModel } from '@google/generative-ai';
+import type {
+  GenerateContentRequest,
+  GenerativeModel,
+  GoogleGenerativeAI,
+} from '@google/generative-ai';
 import { now } from '@reaatech/llm-cost-telemetry';
 import { BaseProviderWrapper, type RequestMetadata, type ResponseMetadata } from './base.js';
 

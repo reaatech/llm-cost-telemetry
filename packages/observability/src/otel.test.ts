@@ -1,6 +1,5 @@
 import type { CostSpan } from '@reaatech/llm-cost-telemetry';
-import { MetricsManager } from '@reaatech/llm-cost-telemetry-observability';
-import { TracingManager } from '@reaatech/llm-cost-telemetry-observability';
+import { MetricsManager, TracingManager } from '@reaatech/llm-cost-telemetry-observability';
 import { describe, expect, it } from 'vitest';
 
 function createTestSpan(overrides: Partial<CostSpan> = {}): CostSpan {
