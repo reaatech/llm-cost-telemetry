@@ -1,6 +1,5 @@
 import type { CostSpan } from '@reaatech/llm-cost-telemetry';
-import { CostCollector } from '@reaatech/llm-cost-telemetry-aggregation';
-import { CostAggregator } from '@reaatech/llm-cost-telemetry-aggregation';
+import { CostAggregator, CostCollector } from '@reaatech/llm-cost-telemetry-aggregation';
 /**
  * Unit tests for aggregation engine
  */

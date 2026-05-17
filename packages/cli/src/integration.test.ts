@@ -7,13 +7,13 @@ import type { ExportResult as BaseExportResult } from '@reaatech/llm-cost-teleme
 import { beforeEach, describe, expect, it } from 'vitest';
 import { checkBudget, formatBudgetStatus } from './commands/check.command.js';
 import {
-  type ExporterInterface,
   buildExportPayload,
+  type ExporterInterface,
   formatExportResult,
   triggerExport,
 } from './commands/export.command.js';
 import { formatReport, generateReport } from './commands/report.command.js';
-import { TEST_BUDGET_CONFIG, createSampleSpan } from './fixtures.js';
+import { createSampleSpan, TEST_BUDGET_CONFIG } from './fixtures.js';
 
 describe('Integration: CLI report command', () => {
   it('generates a JSON report', async () => {
