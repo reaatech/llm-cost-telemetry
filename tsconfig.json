@@ -25,6 +25,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
+    "ignoreDeprecations": "6.0",
     "types": ["node"]
   },
   "exclude": ["node_modules", "dist", "*.config.js"]
