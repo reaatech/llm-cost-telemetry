@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@reaatech/llm-cost-telemetry": ["./packages/core/src/index.ts"],
       "@reaatech/llm-cost-telemetry-calculator": ["./packages/calculator/src/index.ts"],
