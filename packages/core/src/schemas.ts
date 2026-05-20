@@ -74,7 +74,7 @@ export const CostSpanSchema = z.object({
       model: z.string().optional(),
       provider: ProviderSchema.optional(),
       traceId: z.string().uuid().optional(),
-      metadata: z.record(z.unknown()).optional(),
+      metadata: z.record(z.string(), z.unknown()).optional(),
     })
     .optional(),
   tenant: z.string().optional(),
@@ -86,7 +86,7 @@ export const CostSpanSchema = z.object({
   durationMs: z.number().min(0).optional(),
   status: z.enum(['success', 'error', 'ok']).optional(),
   errorMessage: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -167,7 +167,7 @@ export const ExportConfigSchema = z.object({
   batchSize: z.number().int().min(1),
   flushInterval: z.number().int().min(0),
   retryConfig: RetryConfigSchema.optional(),
-  options: z.record(z.unknown()).optional(),
+  options: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -197,7 +197,7 @@ export const CloudMonitoringConfigSchema = ExportConfigSchema.extend({
 export const PhoenixConfigSchema = ExportConfigSchema.extend({
   type: z.literal('phoenix'),
   host: z.string().url(),
-  defaultLabels: z.record(z.string()),
+  defaultLabels: z.record(z.string(), z.string()),
   username: z.string().optional(),
   password: z.string().optional(),
 });
@@ -210,7 +210,7 @@ export const TelemetryConfigSchema = z.object({
   serviceName: z.string().min(1),
   serviceVersion: z.string().optional(),
   environment: z.string().optional(),
-  resourceAttributes: z.record(z.string()).optional(),
+  resourceAttributes: z.record(z.string(), z.string()).optional(),
   tracingEnabled: z.boolean(),
   metricsEnabled: z.boolean(),
   traceSampleRate: z.number().min(0).max(1).optional(),
@@ -266,7 +266,7 @@ export const WebhookConfigSchema = z.object({
   type: z.literal('webhook'),
   url: z.string().url(),
   method: z.enum(['POST', 'PUT']).optional(),
-  headers: z.record(z.string()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
 });
 
 /**
@@ -297,7 +297,7 @@ export const AlertConfigSchema = z.object({
  */
 export const BudgetConfigSchema = z.object({
   global: BudgetLimitsSchema.optional(),
-  tenants: z.record(BudgetLimitsSchema),
+  tenants: z.record(z.string(), BudgetLimitsSchema),
   alerts: z.array(AlertConfigSchema),
 });
 
@@ -378,11 +378,11 @@ export const CostSummarySchema = z.object({
   totalOutputTokens: z.number().int().min(0),
   totalApiCalls: z.number().int().min(0),
   avgCostPerCall: z.number().min(0),
-  byTenant: z.record(TenantCostSummarySchema),
-  byFeature: z.record(FeatureCostSummarySchema),
-  byRoute: z.record(RouteCostSummarySchema),
-  byProvider: z.record(ProviderCostSummarySchema),
-  byModel: z.record(ModelCostSummarySchema),
+  byTenant: z.record(z.string(), TenantCostSummarySchema),
+  byFeature: z.record(z.string(), FeatureCostSummarySchema),
+  byRoute: z.record(z.string(), RouteCostSummarySchema),
+  byProvider: z.record(z.string(), ProviderCostSummarySchema),
+  byModel: z.record(z.string(), ModelCostSummarySchema),
   periodStart: z.date(),
   periodEnd: z.date(),
 });
@@ -395,7 +395,7 @@ export const TelemetryContextSchema = z.object({
   feature: z.string().optional(),
   route: z.string().optional(),
   traceId: z.string().uuid().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
