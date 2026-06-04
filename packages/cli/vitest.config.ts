@@ -1,3 +1,4 @@
+import path from 'path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -6,6 +7,23 @@ export default defineConfig({
     environment: 'node',
     coverage: {
       reporter: ['text', 'json-summary'],
+    },
+  },
+  resolve: {
+    alias: {
+      '@reaatech/llm-cost-telemetry': path.resolve(__dirname, '../core/src/index.ts'),
+      '@reaatech/llm-cost-telemetry-aggregation': path.resolve(
+        __dirname,
+        '../aggregation/src/index.ts',
+      ),
+      '@reaatech/llm-cost-telemetry-calculator': path.resolve(
+        __dirname,
+        '../calculator/src/index.ts',
+      ),
+      '@reaatech/llm-cost-telemetry-exporters': path.resolve(
+        __dirname,
+        '../exporters/src/index.ts',
+      ),
     },
   },
 });
