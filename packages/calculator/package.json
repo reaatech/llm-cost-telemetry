@@ -1,6 +1,6 @@
 {
   "name": "@reaatech/llm-cost-telemetry-calculator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Cost calculation engine for LLM API usage — pricing, token counting, and cost estimation",
   "license": "MIT",
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",

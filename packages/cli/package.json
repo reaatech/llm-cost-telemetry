@@ -1,6 +1,6 @@
 {
   "name": "@reaatech/llm-cost-telemetry-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI for LLM cost telemetry — reporting, budget checking, and export triggering",
   "license": "MIT",
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",

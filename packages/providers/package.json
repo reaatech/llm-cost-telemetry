@@ -1,6 +1,6 @@
 {
   "name": "@reaatech/llm-cost-telemetry-providers",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "LLM provider SDK wrappers — OpenAI, Anthropic, and Google Generative AI",
   "license": "MIT",
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",

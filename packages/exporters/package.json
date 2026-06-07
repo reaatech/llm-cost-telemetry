@@ -1,6 +1,6 @@
 {
   "name": "@reaatech/llm-cost-telemetry-exporters",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Telemetry exporters — CloudWatch, Cloud Monitoring, and Loki/Phoenix",
   "license": "MIT",
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
