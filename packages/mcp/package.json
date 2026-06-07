@@ -1,6 +1,6 @@
 {
   "name": "@reaatech/llm-cost-telemetry-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server exposing LLM cost telemetry as Model Context Protocol tools",
   "license": "MIT",
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
