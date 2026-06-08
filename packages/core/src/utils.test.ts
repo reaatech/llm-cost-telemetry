@@ -223,8 +223,8 @@ describe('Utils', () => {
 
   describe('deepMerge', () => {
     it('should merge objects deeply', () => {
-      const target = { a: 1, b: { c: 2, d: 3 } };
-      const source = { b: { c: 99 } } as any;
+      const target: Record<string, unknown> = { a: 1, b: { c: 2, d: 3 } };
+      const source = { b: { c: 99 } } as Partial<typeof target>;
       const result = deepMerge(target, source);
       expect(result.a).toBe(1);
       expect(result.b.c).toBe(99);

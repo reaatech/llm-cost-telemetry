@@ -8,7 +8,7 @@ export async function loadSpansInput(inputPath?: string): Promise<CostSpan[]> {
     return [];
   }
 
-  const parsed = JSON.parse(raw) as unknown;
+  const parsed: unknown = JSON.parse(raw);
   if (!Array.isArray(parsed)) {
     throw new Error('Input must be a JSON array of cost spans');
   }
@@ -36,11 +36,15 @@ function normalizeSpan(value: unknown): CostSpan {
   const endTime = parseOptionalDate(item.endTime) ?? startTime;
 
   return {
-    ...(item as unknown as CostSpan),
+    provider: item.provider,
+    model: item.model,
+    inputTokens: item.inputTokens as number,
+    outputTokens: item.outputTokens as number,
+    costUsd: item.costUsd as number,
     startTime,
     endTime,
     timestamp: parseOptionalDate(item.timestamp),
-  };
+  } as CostSpan;
 }
 
 function parseOptionalDate(value: unknown): Date | undefined {

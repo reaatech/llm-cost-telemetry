@@ -2,9 +2,13 @@
  * Google Generative AI SDK wrapper for cost telemetry
  */
 import type {
+  EnhancedGenerateContentResponse,
   GenerateContentRequest,
+  GenerateContentStreamResult,
   GenerativeModel,
   GoogleGenerativeAI,
+  ModelParams,
+  SingleRequestOptions,
 } from '@google/generative-ai';
 import { now } from '@reaatech/llm-cost-telemetry';
 import { BaseProviderWrapper, type RequestMetadata, type ResponseMetadata } from './base.js';
@@ -46,18 +50,14 @@ export class GoogleGenerativeAIWrapper extends BaseProviderWrapper<GoogleGenerat
     // Wrap getGenerativeModel to also wrap the returned model
     const originalGetModel = originalClient.getGenerativeModel.bind(originalClient);
 
-    originalClient.getGenerativeModel = ((
-      modelParams: { model: string; generationConfig?: unknown; safetySettings?: unknown },
-      ...rest
-    ) => {
-      // biome-ignore lint/suspicious/noExplicitAny: SDK type bridge
-      const model = originalGetModel(modelParams as any, ...rest) as WrappedGenerativeModel;
+    originalClient.getGenerativeModel = ((modelParams: ModelParams, ...rest) => {
+      const model = originalGetModel(modelParams, ...rest) as WrappedGenerativeModel;
 
       // Wrap generateContent
       const originalGenerate = model.generateContent.bind(model);
       model.generateContent = (async (
         request: string | GenerateContentRequest,
-        options?: { telemetry?: Record<string, unknown> },
+        options?: SingleRequestOptions & { telemetry?: Record<string, unknown> },
       ) => {
         const startTime = now();
         const telemetry = options?.telemetry
@@ -66,24 +66,24 @@ export class GoogleGenerativeAIWrapper extends BaseProviderWrapper<GoogleGenerat
         const modelId = modelParams.model;
 
         try {
-          // biome-ignore lint/suspicious/noExplicitAny: SDK type bridge
-          const response = await originalGenerate(request, options as any);
+          const response = await originalGenerate(
+            request,
+            options as SingleRequestOptions | undefined,
+          );
 
           const endTime = now();
+
+          const responseMetadata: ResponseMetadata = {
+            inputTokens: response.response.usageMetadata?.promptTokenCount ?? 0,
+            outputTokens: response.response.usageMetadata?.candidatesTokenCount ?? 0,
+            endTime,
+          };
 
           const requestMetadata: RequestMetadata = {
             model: modelId,
             params: typeof request === 'string' ? { prompt: request } : request,
             telemetry,
             startTime,
-          };
-
-          // biome-ignore lint/suspicious/noExplicitAny: SDK type bridge
-          const responseAny = response as any;
-          const responseMetadata: ResponseMetadata = {
-            inputTokens: responseAny.usageMetadata?.promptTokenCount ?? 0,
-            outputTokens: responseAny.usageMetadata?.candidatesTokenCount ?? 0,
-            endTime,
           };
 
           const span = wrapper.createSpan(requestMetadata, responseMetadata);
@@ -118,7 +118,7 @@ export class GoogleGenerativeAIWrapper extends BaseProviderWrapper<GoogleGenerat
       const originalGenerateStream = model.generateContentStream.bind(model);
       model.generateContentStream = (async (
         request: string | GenerateContentRequest,
-        options?: { telemetry?: Record<string, unknown> },
+        options?: SingleRequestOptions & { telemetry?: Record<string, unknown> },
       ) => {
         const startTime = now();
         const telemetry = options?.telemetry
@@ -126,8 +126,10 @@ export class GoogleGenerativeAIWrapper extends BaseProviderWrapper<GoogleGenerat
           : undefined;
         const modelId = modelParams.model;
 
-        // biome-ignore lint/suspicious/noExplicitAny: SDK type bridge
-        const responseStream = await originalGenerateStream(request, options as any);
+        const responseStream = await originalGenerateStream(
+          request,
+          options as SingleRequestOptions | undefined,
+        );
 
         // Create a wrapper that collects all chunks
         const originalStream = responseStream.stream;
@@ -192,10 +194,23 @@ export class GoogleGenerativeAIWrapper extends BaseProviderWrapper<GoogleGenerat
         });
 
         // Return a response-like object with our wrapped stream
+        async function* toAsyncGenerator(): AsyncGenerator<EnhancedGenerateContentResponse> {
+          const reader = wrappedStream.getReader();
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              yield value;
+            }
+          } finally {
+            reader.releaseLock();
+          }
+        }
+
         return {
-          stream: wrappedStream,
+          stream: toAsyncGenerator(),
           response: responseStream.response,
-        } as unknown as Awaited<ReturnType<typeof model.generateContentStream>>;
+        } as GenerateContentStreamResult;
       }) as typeof model.generateContentStream;
 
       return model;

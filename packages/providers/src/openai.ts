@@ -48,13 +48,16 @@ export class OpenAIWrapper extends BaseProviderWrapper<OpenAI> {
       ...rest
     ) => {
       const startTime = now();
-      const telemetry = this.extractTelemetryContext(options as unknown as Record<string, unknown>);
+      const opts = options as ChatCompletionCreateParamsNonStreaming & {
+        telemetry?: Record<string, unknown>;
+      };
+      const telemetry = opts.telemetry
+        ? this.extractTelemetryContext({ telemetry: opts.telemetry })
+        : undefined;
       const model = options.model;
 
       // Remove telemetry from options before passing to original
-      const optionsObj = options as unknown as Record<string, unknown>;
-      const { telemetry: _, ...cleanOptionsObj } = optionsObj;
-      const cleanOptions = cleanOptionsObj as unknown as ChatCompletionCreateParamsNonStreaming;
+      const { telemetry: _, ...cleanOptions } = opts;
 
       try {
         const response = await originalChatCreate(cleanOptions, ...rest);
@@ -112,12 +115,15 @@ export class OpenAIWrapper extends BaseProviderWrapper<OpenAI> {
       ...rest
     ) => {
       const startTime = now();
-      const telemetry = this.extractTelemetryContext(options as unknown as Record<string, unknown>);
+      const opts = options as CompletionCreateParamsNonStreaming & {
+        telemetry?: Record<string, unknown>;
+      };
+      const telemetry = opts.telemetry
+        ? this.extractTelemetryContext({ telemetry: opts.telemetry })
+        : undefined;
       const model = options.model;
 
-      const optionsObj = options as unknown as Record<string, unknown>;
-      const { telemetry: _, ...cleanOptionsObj } = optionsObj;
-      const cleanOptions = cleanOptionsObj as unknown as CompletionCreateParamsNonStreaming;
+      const { telemetry: _, ...cleanOptions } = opts;
 
       try {
         const response = await originalCompletionCreate(cleanOptions, ...rest);
