@@ -73,8 +73,7 @@ logger.logAggregation({
 ### Log Budget Alerts
 
 ```typescript
-logger.logBudgetAlert({
-  tenant: 'acme-corp',
+logger.logBudgetAlert('acme-corp', {
   threshold: 0.75,
   percentage: 78,
   action: 'notify'

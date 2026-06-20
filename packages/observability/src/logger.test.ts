@@ -122,8 +122,7 @@ describe('CostLogger', () => {
 
   it('logs budget alert without throwing', () => {
     expect(() => {
-      logger.logBudgetAlert({
-        tenant: 'test-tenant',
+      logger.logBudgetAlert('test-tenant', {
         threshold: 0.8,
         percentage: 85,
         action: 'notify',

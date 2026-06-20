@@ -105,15 +105,17 @@ export class CostLogger {
     );
   }
 
-  logBudgetAlert(status: {
-    tenant: string;
-    threshold: number;
-    percentage: number;
-    action: string;
-  }): void {
+  logBudgetAlert(
+    tenant: string,
+    status: {
+      threshold: number;
+      percentage: number;
+      action: string;
+    },
+  ): void {
     this.logger.warn(
       {
-        tenant: status.tenant,
+        tenant,
         threshold: status.threshold,
         percentage: status.percentage,
         action: status.action,
