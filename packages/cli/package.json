@@ -48,7 +48,7 @@
   "devDependencies": {
     "@reaatech/llm-cost-telemetry-calculator": "workspace:*",
     "tsup": "^8.4.0",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vitest": "^3.1.1"
   }
 }
