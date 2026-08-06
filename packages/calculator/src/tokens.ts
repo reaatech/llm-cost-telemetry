@@ -49,8 +49,9 @@ const TOKENS_PER_CHAR: Record<string, number> = {
 export async function countOpenAITokens(model: string, text: string): Promise<TokenCountResult> {
   try {
     const tiktoken = await import('tiktoken');
-    // biome-ignore lint/suspicious/noExplicitAny: tiktoken model type is a string union
-    const encoding = tiktoken.encoding_for_model(model as any);
+    const encoding = tiktoken.encoding_for_model(
+      model as Parameters<typeof tiktoken.encoding_for_model>[0],
+    );
     const tokens = encoding.encode(text).length;
     encoding.free();
     return { tokens, estimated: false };

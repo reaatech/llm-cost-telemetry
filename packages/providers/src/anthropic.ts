@@ -2,9 +2,14 @@
  * Anthropic SDK wrapper for cost telemetry
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import type { MessageCreateParamsNonStreaming } from '@anthropic-ai/sdk/resources/messages';
+import type { MessageCreateParamsNonStreaming, Usage } from '@anthropic-ai/sdk/resources/messages';
 import { now } from '@reaatech/llm-cost-telemetry';
 import { BaseProviderWrapper, type RequestMetadata, type ResponseMetadata } from './base.js';
+
+interface UsageWithCache extends Usage {
+  cache_read_input_tokens?: number;
+  cache_creation_input_tokens?: number;
+}
 
 /**
  * Wrapped Anthropic client type
@@ -37,17 +42,20 @@ export class AnthropicWrapper extends BaseProviderWrapper<Anthropic> {
 
     originalClient.messages.create = (async (options: MessageCreateParamsNonStreaming, ...rest) => {
       const startTime = now();
-      const telemetry = this.extractTelemetryContext(
-        options as unknown as { [key: string]: unknown },
-      );
+      const opts = options as MessageCreateParamsNonStreaming & {
+        telemetry?: Record<string, unknown>;
+      };
+      const telemetry = opts.telemetry
+        ? this.extractTelemetryContext({ telemetry: opts.telemetry })
+        : undefined;
       const model = options.model;
 
       // Remove telemetry from options before passing to original
-      const { telemetry: _, ...cleanOptions } = options as unknown as { [key: string]: unknown };
+      const { telemetry: _, ...cleanOptions } = opts;
 
       try {
         const response = await originalCreate(
-          cleanOptions as unknown as MessageCreateParamsNonStreaming,
+          cleanOptions as MessageCreateParamsNonStreaming,
           ...rest,
         );
 
@@ -69,12 +77,12 @@ export class AnthropicWrapper extends BaseProviderWrapper<Anthropic> {
         let cacheCreationTokens: number | undefined;
 
         // Check for cache tokens in the response
-        const usage = response.usage as unknown as { [key: string]: unknown };
-        if ('cache_read_input_tokens' in usage) {
-          cacheReadTokens = usage.cache_read_input_tokens as number;
+        const usage = response.usage as UsageWithCache;
+        if (usage.cache_read_input_tokens !== undefined) {
+          cacheReadTokens = usage.cache_read_input_tokens;
         }
-        if ('cache_creation_input_tokens' in usage) {
-          cacheCreationTokens = usage.cache_creation_input_tokens as number;
+        if (usage.cache_creation_input_tokens !== undefined) {
+          cacheCreationTokens = usage.cache_creation_input_tokens;
         }
 
         const responseMetadata: ResponseMetadata = {

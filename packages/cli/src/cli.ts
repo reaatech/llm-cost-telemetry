@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 import { loadConfig } from '@reaatech/llm-cost-telemetry';
 import { BudgetManager } from '@reaatech/llm-cost-telemetry-aggregation';
+import type {
+  CloudMonitoringExporter,
+  CloudWatchExporter,
+  PhoenixExporter,
+} from '@reaatech/llm-cost-telemetry-exporters';
 /**
  * CLI entry point for llm-cost-telemetry
  */
 import { Command } from 'commander';
 import packageJson from '../package.json' with { type: 'json' };
 import { checkBudget, formatBudgetStatus } from './commands/check.command.js';
+import type { ExporterInterface } from './commands/export.command.js';
 import { formatReport, generateReport } from './commands/report.command.js';
 import { loadSpansInput } from './input.js';
 
@@ -110,8 +116,7 @@ program
     }
     const records = buildExportPayload(spans);
 
-    // biome-ignore lint/suspicious/noImplicitAnyLet: dynamically typed via switch-case
-    let exporter;
+    let exporter: CloudWatchExporter | CloudMonitoringExporter | PhoenixExporter | undefined;
     if (!options.dryRun) {
       switch (options.exporter) {
         case 'cloudwatch': {
@@ -145,20 +150,31 @@ program
       process.exit(1);
     }
 
-    const result = options.dryRun
-      ? {
-          exporter: options.exporter ?? 'dry-run',
-          period: options.period,
-          recordsExported: records.length,
-          success: true,
-          durationMs: 0,
-          errors: [],
-        }
-      : // biome-ignore lint/style/noNonNullAssertion: guarded by check at line 142
-        await triggerExport(exporter!, records, {
-          exporter: options.exporter,
-          period: options.period,
-        });
+    let result:
+      | Awaited<ReturnType<typeof triggerExport>>
+      | {
+          exporter: string;
+          period: string;
+          recordsExported: number;
+          success: boolean;
+          durationMs: number;
+          errors: never[];
+        };
+    if (options.dryRun) {
+      result = {
+        exporter: options.exporter ?? 'dry-run',
+        period: options.period,
+        recordsExported: records.length,
+        success: true,
+        durationMs: 0,
+        errors: [],
+      };
+    } else {
+      result = await triggerExport(exporter as ExporterInterface, records, {
+        exporter: options.exporter,
+        period: options.period,
+      });
+    }
 
     console.log(formatExportResult(result));
   });
